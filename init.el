@@ -11,11 +11,9 @@
 (setq use-package-always-ensure t)
 
 ;;; Misc settings
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-
-(global-so-long-mode 1)
-(show-paren-mode 1)
-(setq blink-cursor-blinks 2)
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory)
+      blink-cursor-blinks 2)
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;;; Functions
 (defun ebn/--setup-variable-fonts ()
@@ -36,9 +34,8 @@
 (use-package emacs
   :custom
   (delete-selection-mode t)
+  (show-paren-mode 1)
   :bind
-  (:map lisp-interaction-mode-map
-	("C-<return>" . eval-print-last-sexp))
   (:map global-map
 	("C-8" . backward-list)
 	("C-9" . forward-list)
@@ -55,6 +52,11 @@
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
 	("C-c r" . recentf-open-files)))
+
+(use-package so-long
+  :defer 10
+  :init
+  (global-so-long-mode 1))
 
 (use-package dired
   :ensure nil
@@ -165,6 +167,7 @@
   (setq no-littering-var-directory
 	(expand-file-name "data/" user-emacs-directory))
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (recentf-mode)
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
@@ -202,7 +205,7 @@
   :init
   (setq consult-preview-key nil)
   (recentf-mode)
-  :bind
+  :bind*
   (:map global-map
 	("C-c r" . consult-recent-file)
 	("C-c f" . consult-ripgrep)
@@ -259,13 +262,6 @@
 
   :config (progn
 	    (require 'org-mouse)
-	    (defun ebn/org-eval-block ()
-	      "Wrapper around org-ctrl-c-ctrl-c that previews latex."
-	      (interactive)
-	      (org-ctrl-c-ctrl-c)
-	      (when (string= "sage" (plist-get (cadr (org-element-at-point)) :language))
-		(org-latex-preview)))
-
 	    ;; Options
 	    (setq org-startup-indented t
 		  org-startup-with-latex-preview t
@@ -308,7 +304,8 @@
 	    (org-babel-do-load-languages
 	     'org-babel-load-languages
 	     '((maxima . t)
-	       (julia-vterm . t)))
+	       (julia-vterm . t)
+	       (haskell . t)))
 	    (setq org-confirm-babel-evaluate nil)
 	    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)   
 	    (add-hook 'org-mode-hook 'org-display-inline-images)
@@ -350,7 +347,8 @@
 		       (org-cdlatex-mode)
 		       (ebn/--setup-variable-fonts)))))
 
-(use-package org-modern)
+(use-package org-modern
+  :hook (org-mode . org-modern-mode))
 
 (use-package org-roam
   :defer t
@@ -359,9 +357,13 @@
   :init
   (setq org-roam-v2-ack t) ;; Disable v2-migration-prompt
 
+  (setq org-roam-node-display-template
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
+
   :custom
   (org-roam-directory "~/org/org-roam")
-  (org-roam-completion-everywhere t)
+  (org-roam-completion-everywhere t) 
   (org-roam-capture-templates
    `(("d" "default" plain "%?"
       :if-new (file+head
@@ -412,6 +414,7 @@
   :init
   (add-hook 'lisp-mode-hook #'paredit-mode)
   (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+  :config (define-key paredit-mode-map [remap paredit-newline] nil)
   :bind (:map paredit-mode-map
 	      ("M-<left>" . paredit-backward-barf-sexp)
 	      ("M-<right>" . paredit-forward-barf-sexp)
@@ -432,6 +435,10 @@
   (add-hook 'racket-mode-hook      #'racket-xp-mode)
   (add-hook 'racket-mode-hook      #'paredit-mode))
 
+;;; Haskell
+(use-package haskell-mode
+  :hook (haskell-mode . interactive-haskell-mode))
+
 ;;; Misc
 (use-package vterm)
 (use-package rainbow-mode)
@@ -446,7 +453,8 @@
                       completion-at-point-functions)))
 
   (add-hook 'prog-mode-hook 'tempel-setup-capf)
-  (add-hook 'text-mode-hook 'tempel-setup-capf))
+  (add-hook 'text-mode-hook 'tempel-setup-capf)
+  (add-hook 'org-mode-hook 'tempel-setup-capf))
 
 (use-package sv-kalender
   :ensure nil
@@ -458,3 +466,56 @@
   :commands (pdf-view-mode pdf-tools-install)
   :config
   (pdf-tools-install))
+
+;;; Rest/WIP
+(with-eval-after-load "re-builder"
+  (progn
+    (defvar my/re-builder-positions nil
+      "Store point and region bounds before calling re-builder")
+    (advice-add 're-builder
+		:before
+		(defun my/re-builder-save-state (&rest _)
+		  "Save into `my/re-builder-positions' the point and region
+positions before calling `re-builder'."
+		  (setq my/re-builder-positions
+			(cons (point)
+                              (when (region-active-p)
+				(list (region-beginning)
+                                      (region-end)))))))
+
+    (defun reb-replace-regexp (&optional delimited)
+      "Run `query-replace-regexp' with the contents of re-builder. With
+non-nil optional argument DELIMITED, only replace matches
+surrounded by word boundaries."
+      (interactive "P")
+      (reb-update-regexp)
+      (let* ((re (reb-target-binding reb-regexp))
+             (replacement (query-replace-read-to
+			   re
+			   (concat "Query replace"
+				   (if current-prefix-arg
+                                       (if (eq current-prefix-arg '-) " backward" " word")
+                                     "")
+				   " regexp"
+				   (if (with-selected-window reb-target-window
+					 (region-active-p))
+				       " in region" ""))
+			   t))
+             (pnt (car my/re-builder-positions))
+             (beg (cadr my/re-builder-positions))
+             (end (caddr my/re-builder-positions)))
+	(with-selected-window reb-target-window
+	  (goto-char pnt)
+	  (setq my/re-builder-positions nil)
+	  (reb-quit)
+	  (query-replace-regexp re replacement delimited beg end))))
+
+    (define-key reb-mode-map (kbd "RET") #'reb-replace-regexp)
+    (define-key reb-lisp-mode-map (kbd "RET") #'reb-replace-regexp)
+    (global-set-key (kbd "C-M-%") #'re-builder)))
+
+(use-package olivetti
+  :defer t
+  :commands 'olivetti-mode
+  :custom
+  (olivetti-body-width 100))
