@@ -260,76 +260,57 @@
 		    (calendar-last-day-of-month month year)))
 	      (= day last-day-of-month))))
 
-  :config (progn
-	    (require 'org-mouse)
-	    ;; Options
-	    (setq org-startup-indented t
-		  org-startup-with-latex-preview t
-		  org-pretty-entities t
-		  org-startup-with-inline-images t
-		  org-ellipsis " …"
-  		  org-export-preserve-breaks t
-		  org-highlight-latex-and-related '(native)
-		  org-src-fontify-natively t
-		  org-fontify-quote-and-verse-blocks t
-		  org-startup-folded t
-		  org-cycle-separator-lines 2
-		  org-catch-invisible-edits 'error
-		  org-ctrl-k-protect-subtree t
-		  org-image-actual-width nil
-		  org-return-follows-link t
-		  org-hide-emphasis-markers t
-		  org-format-latex-options (plist-put org-format-latex-options :scale 1.5)
-		  org-latex-listings 'minted
-		  org-latex-packages-alist '(("" "minted"))
-		  org-latex-tables-centered t
-		  org-insert-heading-respect-content t
-		  org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-				      (sequence "BACKLOG(b)" "ACTIVE(a)"
-						"REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
-						"|" "DELEGATED(D)" "CANCELLED(c)"))
-		  org-agenda-current-time-string "← now ─────────────────"
-		  org-latex-pdf-process
-		  ;; The reason why this is a list is that it usually takes several
-		  ;; runs of ‘pdflatex’, maybe mixed with a call to ‘bibtex’.  Org
-		  ;; does not have a clever mechanism to detect which of these
-		  ;; commands have to be run to get to a stable result, and it also
-		  ;; does not do any error checking.
-		  '("lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-		    "biber %b"
-		    "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-		    "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  :config
+  (require 'org-mouse)
+  (plist-put org-format-latex-options :scale 1.5)
+  ;; Options
+  :custom
+  (org-startup-indented t)
+  (org-startup-with-latex-preview t)
+  (org-pretty-entities t)
+  (org-startup-with-inline-images t)
+  (org-ellipsis " …")
+  (org-export-preserve-breaks t)
+  (org-highlight-latex-and-related '(native))
+  (org-src-fontify-natively t)
+  (org-fontify-quote-and-verse-blocks t)
+  (org-startup-folded t)
+  (org-cycle-separator-lines 2)
+  (org-catch-invisible-edits 'error)
+  (org-ctrl-k-protect-subtree t)
+  (org-image-actual-width nil)
+  (org-return-follows-link t)
+  (org-hide-emphasis-markers t)
+;  (org-format-latex-options 			    )
+  (org-latex-listings 'minted)
+  (org-latex-packages-alist '(("" "minted")))
+  (org-latex-tables-centered t)
+  (org-insert-heading-respect-content t)
+  (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+		       (sequence "BACKLOG(b)" "ACTIVE(a)"
+				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
+				 "|" "DELEGATED(D)" "CANCELLED(c)")))
+  (org-agenda-current-time-string "← now ─────────────────")
+  (org-latex-pdf-process
+   ;; The reason why this is a list is that it usually takes several
+   ;; runs of ‘pdflatex’, maybe mixed with a call to ‘bibtex’.  Org
+   ;; does not have a clever mechanism to detect which of these
+   ;; commands have to be run to get to a stable result, and it also
+   ;; does not do any error checking.
+   '("lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "biber %b"
+     "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
 
-	    ;; active Babel languages
-	    (org-babel-do-load-languages
-	     'org-babel-load-languages
-	     '((maxima . t)
-	       (julia-vterm . t)
-	       (haskell . t)))
-	    (setq org-confirm-babel-evaluate nil)
-	    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)   
-	    (add-hook 'org-mode-hook 'org-display-inline-images)
-	    
-	    ;; Org-agenda
-	    (setq org-agenda-files '("gtd.org" "someday.org" "tickler.org")
-		  org-agenda-include-diary t
-		  org-capture-templates
-		  '(("i" "Inbox" entry (file "~/org/inbox.org"))
-		    ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
-		     "* TODO %?\n  %i\n  %a")
-		    ("s" "Someday" entry (file "~/org/someday.org")
-		     "* TODO %?\n  %i\n  %a")
-		    ("r" "Roam node" function #'org-roam-capture)
-		    ("j" "Journal: Today" function #'org-roam-dailies-capture-today)
-		    ("J" "Journal: Tomorrow" function #'org-roam-dailies-capture-tomorrow)
-		    ("d" "Journal: Date" function #'org-roam-dailies-capture-date))
-		  org-refile-targets
-		  '((nil :maxlevel . 3)
-		    (org-agenda-files :maxlevel . 3)))
-
-	    (defun ebn/rectangle-number-lines ()
-	      (interactive)
-	      (rectangle-number-lines (region-beginning) (region-end) 1 "%s. ")))
+  ;; active Babel languages
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((maxima . t)
+     (julia-vterm . t)
+     (haskell . t)))
+  (setq org-confirm-babel-evaluate nil)
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+  (add-hook 'org-mode-hook 'org-display-inline-images)
 
   :bind*
   (:map org-mode-map
