@@ -3,6 +3,7 @@
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
+(setq package-native-compile t)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -18,13 +19,8 @@
 ;;; Functions
 (defun ebn/--setup-variable-fonts ()
   (interactive)
-  (set-face-attribute
-   'variable-pitch nil
-   :font "Sarasa Mono CL-12")
-
-  (set-face-attribute
-   'fixed-pitch nil
-   :font "Sarasa Mono CL-12"))
+  (set-face-attribute 'variable-pitch nil :font "Iosevka Comfy-14")
+  (set-face-attribute 'fixed-pitch nil :font "Iosevka Comfy-14"))
 
 (defun ebn/su-find-this-file ()
   (interactive)
@@ -35,6 +31,10 @@
   :custom
   (delete-selection-mode t)
   (show-paren-mode 1)
+  (global-prettify-symbols-mode t)
+  :init
+  (add-hook 'emacs-lisp-mode-hook (lambda ()
+				    (setq-local page-delimiter ";;;")))
   :bind
   (:map global-map
 	("C-8" . backward-list)
@@ -44,6 +44,7 @@
 	("M-1" . delete-other-frames)
 	("M-2" . make-frame)
 	("M-3" . delete-frame)
+	("M-j" . join-line)
 	("s-r" . replace-string)
 	("M-z" . zap-up-to-char)
 	("C-c t l" . display-line-numbers-mode)
@@ -57,6 +58,11 @@
   :defer 10
   :init
   (global-so-long-mode 1))
+
+(use-package proced
+  :commands proced
+  :config
+  (setq-default proced-format 'medium))
 
 (use-package dired
   :ensure nil
@@ -73,6 +79,7 @@
   ("C-x C-d" . dired-other-window)
   (:map dired-mode-map
 	(")" . dired-omit-mode)
+	("-" . dired-up-directory)
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)))
 
@@ -144,7 +151,8 @@
 	erc-hide-list '("JOIN" "PART" "QUIT")
         erc-nick "ebn"
 	erc-prompt-for-password nil)
-  (setq auth-sources '("~/.authinfo.gpg"))
+  ;(setq auth-sources '("~/.authinfo.gpg"))
+  (setq auth-sources '(password-store))
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#000")
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
 
@@ -263,8 +271,17 @@
   :config
   (require 'org-mouse)
   (plist-put org-format-latex-options :scale 1.5)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((maxima . t)
+     (julia . t)
+     (haskell . t)))
+  (setq org-confirm-babel-evaluate nil)
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+  (add-hook 'org-mode-hook 'org-display-inline-images)
   ;; Options
   :custom
+  (org-confirm-babel-evaluate nil)
   (org-startup-indented t)
   (org-startup-with-latex-preview t)
   (org-pretty-entities t)
@@ -281,7 +298,6 @@
   (org-image-actual-width nil)
   (org-return-follows-link t)
   (org-hide-emphasis-markers t)
-;  (org-format-latex-options 			    )
   (org-latex-listings 'minted)
   (org-latex-packages-alist '(("" "minted")))
   (org-latex-tables-centered t)
@@ -291,6 +307,17 @@
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
 				 "|" "DELEGATED(D)" "CANCELLED(c)")))
   (org-agenda-current-time-string "← now ─────────────────")
+  (org-agenda-files '("gtd.org" "someday.org" "tickler.org"))
+  (org-capture-templates
+   '(("i" "Inbox" entry (file "~/org/inbox.org"))
+     ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
+      "* TODO %?\n  %i\n  %a")
+     ("s" "Someday" entry (file "~/org/someday.org")
+      "* TODO %?\n  %i\n  %a")
+     ("r" "Roam node" function #'org-roam-capture)
+     ("j" "Journal: Today" function #'org-roam-dailies-capture-today)
+     ("J" "Journal: Tomorrow" function #'org-roam-dailies-capture-tomorrow)
+     ("d" "Journal: Date" function #'org-roam-dailies-capture-date)))
   (org-latex-pdf-process
    ;; The reason why this is a list is that it usually takes several
    ;; runs of ‘pdflatex’, maybe mixed with a call to ‘bibtex’.  Org
@@ -301,22 +328,10 @@
      "biber %b"
      "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
      "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
-
-  ;; active Babel languages
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((maxima . t)
-     (julia-vterm . t)
-     (haskell . t)))
-  (setq org-confirm-babel-evaluate nil)
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
-  (add-hook 'org-mode-hook 'org-display-inline-images)
-
   :bind*
   (:map org-mode-map
 	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
-	("C-j" . join-line)
 	("C-<tab>" . org-cycle))
   (:map global-map
 	("C-c n n" . org-capture)
@@ -329,6 +344,9 @@
 		       (ebn/--setup-variable-fonts)))))
 
 (use-package org-modern
+  :custom
+  (org-modern-block nil)
+  (org-modern-table nil)
   :hook (org-mode . org-modern-mode))
 
 (use-package org-roam
@@ -381,12 +399,35 @@
 (use-package julia-mode
   :ensure
   :config
-  (use-package julia-repl)
-  (use-package julia-vterm)
-  (use-package ob-julia-vterm)
   (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
   (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm)
   (setq julia-program "julia1.7"))
+
+(use-package julia-snail
+  :ensure t
+  :custom
+  (julia-snail-extensions '(ob-julia))
+  :hook (julia-mode . julia-snail-mode))
+
+(use-package julia-vterm :disabled)
+(use-package ob-julia-vterm :disabled)
+
+(use-package julia-repl
+  :disabled
+  :ensure t
+  :hook (julia-mode . julia-repl-mode)
+
+  :init
+  (setenv "JULIA_NUM_THREADS" "8")
+
+  :config
+  ;; Set the terminal backend
+  (julia-repl-set-terminal-backend 'vterm)
+  
+  ;; Keybindings for quickly sending code to the REPL
+  (define-key julia-repl-mode-map (kbd "<C-RET>") 'my/julia-repl-send-cell)
+  (define-key julia-repl-mode-map (kbd "<M-RET>") 'julia-repl-send-line)
+  (define-key julia-repl-mode-map (kbd "<S-return>") 'julia-repl-send-buffer))
 
 (use-package cdlatex)
 
@@ -418,7 +459,11 @@
 
 ;;; Haskell
 (use-package haskell-mode
-  :hook (haskell-mode . interactive-haskell-mode))
+  :custom
+  (haskell-font-lock-symbols t)
+  (haskell-tags-on-save t)
+  :hook
+  (haskell-mode . interactive-haskell-mode))
 
 ;;; Misc
 (use-package vterm)
@@ -444,7 +489,7 @@
 
 (use-package pdf-tools
   :defer t
-  :commands (pdf-view-mode pdf-tools-install)
+  :commands (pdf-view-mode pdf-tools-install doc-view-mode)
   :config
   (pdf-tools-install))
 
@@ -500,3 +545,9 @@ surrounded by word boundaries."
   :commands 'olivetti-mode
   :custom
   (olivetti-body-width 100))
+
+(use-package eix
+  :ensure nil
+  :load-path "lisp/")
+
+(use-package package-lint)
