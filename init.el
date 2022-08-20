@@ -19,12 +19,22 @@
 ;;; Functions
 (defun ebn/--setup-variable-fonts ()
   (interactive)
-  (set-face-attribute 'variable-pitch nil :font "Iosevka Comfy-14")
-  (set-face-attribute 'fixed-pitch nil :font "Iosevka Comfy-14"))
+  (set-face-attribute 'variable-pitch nil :font "Sarasa Mono CL-12")
+  (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono CL-12"))
 
 (defun ebn/su-find-this-file ()
   (interactive)
   (find-file (format "/su::%s" (buffer-file-name))))
+
+(defvar ebn/prev-buffer nil)
+
+(defun ebn/cycle-buffer ()
+  (interactive)
+  (if (not ebn/prev-buffer)
+      (setq ebn/prev-buffer (current-buffer))
+    (let ((b (current-buffer)))
+      (switch-to-buffer ebn/prev-buffer)
+      (setq ebn/prev-buffer b))))
 
 ;;; Built-in Packages
 (use-package emacs
@@ -52,6 +62,7 @@
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
+	("s-ö" . ebn/cycle-buffer)
 	("C-c r" . recentf-open-files)))
 
 (use-package so-long
