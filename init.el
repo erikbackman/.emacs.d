@@ -442,6 +442,10 @@
 
 (use-package cdlatex)
 
+(use-package org-auctex
+  :load-path "lisp/"
+  :hook (org-mode . org-cdlatex-mode))
+
 ;;; Lisp
 (use-package paredit
   :init
