@@ -28,7 +28,7 @@
 
 (defvar ebn/prev-buffer nil)
 
-(defun ebn/cycle-buffer ()
+(defun ebn/other-buffer ()
   (interactive)
   (when-let ((b ebn/prev-buffer))
     (switch-to-buffer b)))
@@ -62,7 +62,7 @@
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
-	("s-ö" . ebn/cycle-buffer)
+	("s-ö" . ebn/other-buffer)
 	("C-c r" . recentf-open-files)))
 
 (use-package so-long
