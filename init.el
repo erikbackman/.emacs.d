@@ -30,11 +30,11 @@
 
 (defun ebn/cycle-buffer ()
   (interactive)
-  (if (not ebn/prev-buffer)
-      (setq ebn/prev-buffer (current-buffer))
-    (let ((b (current-buffer)))
-      (switch-to-buffer ebn/prev-buffer)
-      (setq ebn/prev-buffer b))))
+  (when-let ((b ebn/prev-buffer))
+    (switch-to-buffer b)))
+
+(advice-add 'switch-to-buffer
+	    :before (lambda (&rest r) (setq ebn/prev-buffer (current-buffer))))
 
 ;;; Built-in Packages
 (use-package emacs
