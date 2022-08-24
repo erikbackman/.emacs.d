@@ -42,9 +42,10 @@
   (delete-selection-mode t)
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
+  (winner-mode 1)
   :init
-  (add-hook 'emacs-lisp-mode-hook (lambda ()
-				    (setq-local page-delimiter ";;;")))
+  (add-hook 'emacs-lisp-mode-hook
+	    (lambda () (setq-local page-delimiter ";;;")))
   :bind
   (:map global-map
 	("C-8" . backward-list)
@@ -57,13 +58,14 @@
 	("M-j" . join-line)
 	("s-r" . replace-string)
 	("M-z" . zap-up-to-char)
+	("M-c" . capitalize-dwim)
 	("C-c t l" . display-line-numbers-mode)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
 	("s-ö" . ebn/other-buffer)
-	("C-c r" . recentf-open-files)))
+	("C-c r" . consult-recent-file)))
 
 (use-package so-long
   :defer 10
@@ -163,7 +165,7 @@
         erc-nick "ebn"
 	erc-prompt-for-password nil)
   ;(setq auth-sources '("~/.authinfo.gpg"))
-  (setq auth-sources '(password-store))
+  (setq auth-sources '("~/.password-store"))
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#000")
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
 
@@ -186,7 +188,8 @@
   (setq no-littering-var-directory
 	(expand-file-name "data/" user-emacs-directory))
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (recentf-mode)
+  (unless
+      (recentf-mode))
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
@@ -224,7 +227,7 @@
   :init
   (setq consult-preview-key nil)
   (recentf-mode)
-  :bind*
+  :bind
   (:map global-map
 	("C-c r" . consult-recent-file)
 	("C-c f" . consult-ripgrep)
@@ -244,12 +247,12 @@
 	 ("C-c p l" . cape-line)
 	 ("C-c p \\" . cape-tex))
   :config
-  (setq-local completion-at-point-functions
-              (list (cape-super-capf
-		     #'cape-dabbrev
-		     ;;#'cape-dict
-		     #'cape-keyword
-		     #'cape-symbol)))
+  ;; (setq-local completion-at-point-functions
+  ;;             (list (cape-super-capf
+  ;; 		     ;;#'cape-dabbrev
+  ;; 		     ;;#'cape-dict
+  ;; 		     #'cape-keyword
+  ;; 		     #'cape-symbol)))
 
   ;; Silence then pcomplete capf, no errors or messages!
   (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
@@ -335,10 +338,10 @@
    ;; does not have a clever mechanism to detect which of these
    ;; commands have to be run to get to a stable result, and it also
    ;; does not do any error checking.
-   '("lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "biber %b"
-     "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "lualatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+   ;;      "biber %b"
+   '("luatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "luatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "luatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
   :bind*
   (:map org-mode-map
 	("C-<return>" . org-meta-return)
@@ -418,6 +421,7 @@
   :ensure t
   :custom
   (julia-snail-extensions '(ob-julia))
+  (julia-snail-repl-display-eval-results nil)
   :hook (julia-mode . julia-snail-mode))
 
 (use-package julia-vterm :disabled)
@@ -444,7 +448,9 @@
 
 (use-package org-auctex
   :load-path "lisp/"
-  :hook (org-mode . org-cdlatex-mode))
+  :custom
+  (preview-scale-function 1.7)
+  :hook (org-mode . org-auctex-mode))
 
 ;;; Lisp
 (use-package paredit
@@ -476,7 +482,7 @@
 (use-package haskell-mode
   :custom
   (haskell-font-lock-symbols t)
-  (haskell-tags-on-save t)
+;  (haskell-tags-on-save t)
   :hook
   (haskell-mode . interactive-haskell-mode))
 
@@ -495,7 +501,9 @@
 
   (add-hook 'prog-mode-hook 'tempel-setup-capf)
   (add-hook 'text-mode-hook 'tempel-setup-capf)
-  (add-hook 'org-mode-hook 'tempel-setup-capf))
+  (add-hook 'org-mode-hook 'tempel-setup-capf)
+  :bind (("s-+" . tempel-expand)
+         ("s-*" . tempel-insert)))
 
 (use-package sv-kalender
   :ensure nil
@@ -504,7 +512,9 @@
 
 (use-package pdf-tools
   :defer t
+  :ensure t
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
+  :mode ("\\.pdf\\'" . pdf-view-mode)
   :config
   (pdf-tools-install))
 
@@ -559,10 +569,25 @@ surrounded by word boundaries."
   :defer t
   :commands 'olivetti-mode
   :custom
-  (olivetti-body-width 100))
+  (olivetti-body-width 100)
+  :config
+  (ebn/def-repeat-map olivetti-expand-repeat-map
+		      :keys ("C-c {" #'olivetti-shrink
+			     "C-c }" #'olivetti-expand)))
 
 (use-package eix
   :ensure nil
   :load-path "lisp/")
 
+(use-package elfeed
+  :defer t
+  :commands (efleed elfeed-update)
+  :custom
+  (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
+		  ("https://sachachua.com/blog/feed/" emacs))))
+
 (use-package package-lint)
+
+(use-package keycast)
+
+(use-package diredfl)
