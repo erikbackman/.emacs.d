@@ -64,8 +64,7 @@
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
-	("s-ö" . ebn/other-buffer)
-	("C-c r" . consult-recent-file)))
+	("s-ö" . ebn/other-buffer)))
 
 (use-package so-long
   :defer 10
@@ -188,8 +187,7 @@
   (setq no-littering-var-directory
 	(expand-file-name "data/" user-emacs-directory))
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (unless
-      (recentf-mode))
+  (unless (recentf-mode))
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
@@ -247,13 +245,6 @@
 	 ("C-c p l" . cape-line)
 	 ("C-c p \\" . cape-tex))
   :config
-  ;; (setq-local completion-at-point-functions
-  ;;             (list (cape-super-capf
-  ;; 		     ;;#'cape-dabbrev
-  ;; 		     ;;#'cape-dict
-  ;; 		     #'cape-keyword
-  ;; 		     #'cape-symbol)))
-
   ;; Silence then pcomplete capf, no errors or messages!
   (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
 
@@ -482,11 +473,17 @@
 (use-package haskell-mode
   :custom
   (haskell-font-lock-symbols t)
-;  (haskell-tags-on-save t)
   :hook
   (haskell-mode . interactive-haskell-mode))
 
 ;;; Misc
+(use-package elfeed
+  :defer t
+  :commands (efleed elfeed-update)
+  :custom
+  (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
+		  ("https://sachachua.com/blog/feed/" emacs))))
+
 (use-package vterm)
 (use-package rainbow-mode)
 
@@ -578,13 +575,6 @@ surrounded by word boundaries."
 (use-package eix
   :ensure nil
   :load-path "lisp/")
-
-(use-package elfeed
-  :defer t
-  :commands (efleed elfeed-update)
-  :custom
-  (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
-		  ("https://sachachua.com/blog/feed/" emacs))))
 
 (use-package package-lint)
 
