@@ -476,6 +476,34 @@
   :hook
   (haskell-mode . interactive-haskell-mode))
 
+;;; Mail
+(use-package notmuch
+  :ensure nil
+  :custom
+  (notmuch-saved-searches
+   '((:name "inbox" :query "tag:inbox" :key "i")
+     (:name "unread" :query "tag:unread" :key "u")
+     (:name "flagged" :query "tag:flagged" :key "f")
+     (:name "sent" :query "tag:sent" :key "s")
+     (:name "drafts" :query "tag:draft" :key "d")
+     (:name "all mail" :query "*" :key "a")
+     (:name "kau" :query "tag:kau" :key "k")
+     (:name "today" :query "date:today" :key "t")
+     (:name "study" :query "tag:study" :key "S"))))
+;(use-package ol-notmuch)
+
+(use-package smtpmail
+  :config
+  (setq smtpmail-default-smtp-server "smtp.mailbox.org"
+	smtpmail-smtp-server "smtp.mailbox.org"
+	smtpmail-stream-type 'ssl
+	smtpmail-smtp-service 465
+	smtpmail-queue-mail nil))
+
+(use-package sendmail
+  :config
+  (setq send-mail-function 'smtpmail-send-it))
+
 ;;; Misc
 (use-package elfeed
   :defer t
