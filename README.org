@@ -1,5 +1,1 @@
 #+title: .emacs.d
-
-This is my current Emacs configuration on Gentoo. It does however only
-contain things that I currently use, for a more complete configuration
-see my NixOS config.
