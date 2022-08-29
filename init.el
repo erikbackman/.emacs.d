@@ -490,7 +490,6 @@
      (:name "kau" :query "tag:kau" :key "k")
      (:name "today" :query "date:today" :key "t")
      (:name "study" :query "tag:study" :key "S"))))
-;(use-package ol-notmuch)
 
 (use-package smtpmail
   :config
