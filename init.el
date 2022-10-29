@@ -43,6 +43,7 @@
   (winner-mode 1)
   (midnight-mode t)
   (eshell-destroy-buffer-when-process-dies t)
+  (tab-always-indent 'complete)
 ;  (inhibit-splash-screen t)
   :init
   (put 'narrow-to-region 'disabled nil)
