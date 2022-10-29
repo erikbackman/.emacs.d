@@ -19,22 +19,20 @@
 ;;; Functions
 (defun ebn/--setup-variable-fonts ()
   (interactive)
-  (set-face-attribute 'variable-pitch nil :font "Sarasa Mono CL-12")
-  (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono CL-12"))
+  (set-face-attribute 'variable-pitch nil :font "JuliaMono-12")
+  (set-face-attribute 'fixed-pitch nil :font "JuliaMono-12"))
 
 (defun ebn/su-find-this-file ()
   (interactive)
-  (find-file (format "/su::%s" (buffer-file-name))))
+  (let ((cur-buffer (current-buffer)))
+    (kill-buffer cur-buffer)
+    (find-file (format "/su::%s" (buffer-file-name cur-buffer)))))
 
-(defvar ebn/prev-buffer nil)
-
-(defun ebn/other-buffer ()
-  (interactive)
-  (when-let ((b ebn/prev-buffer))
-    (switch-to-buffer b)))
-
-(advice-add 'switch-to-buffer
-	    :before (lambda (&rest r) (setq ebn/prev-buffer (current-buffer))))
+(defun ebn/bury-scratch-buffer ()
+  (if (string= (buffer-name) "*scratch*")
+      (ignore (bury-buffer))
+    t))
+(add-hook 'kill-buffer-query-functions 'ebn/bury-scratch-buffer)
 
 ;;; Built-in Packages
 (use-package emacs
@@ -43,28 +41,60 @@
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
   (winner-mode 1)
+  (midnight-mode t)
+  (eshell-destroy-buffer-when-process-dies t)
+;  (inhibit-splash-screen t)
   :init
-  (add-hook 'emacs-lisp-mode-hook
-	    (lambda () (setq-local page-delimiter ";;;")))
+  (put 'narrow-to-region 'disabled nil)
+  (when (version<= "29" emacs-version)
+    (define-key minibuffer-mode-map (kbd "C-n") 'minibuffer-next-completion)
+    (define-key minibuffer-mode-map (kbd "C-p") 'minibuffer-previous-completion)
+    (define-key completion-in-region-mode-map (kbd "C-n") 'minibuffer-next-completion)
+    (define-key completion-in-region-mode-map (kbd "C-p") 'minibuffer-previous-completion)
+    (setq completions-format 'one-column)
+    (setq completions-header-format nil)
+    (setq completions-max-height 20)
+    (setq completion-auto-select 'second-tab)
+    (setq minibuffer-completion-auto-choose t))
+  
   :bind
   (:map global-map
 	("C-8" . backward-list)
 	("C-9" . forward-list)
 	("C-f" . forward-word)
 	("C-b" . backward-word)
+	("M-f" . forward-word)
 	("M-1" . delete-other-frames)
 	("M-2" . make-frame)
 	("M-3" . delete-frame)
+	("s-3" . delete-frame)
 	("M-j" . join-line)
 	("s-r" . replace-string)
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
+	("M-g M-g" . consult-goto-line)
 	("C-c t l" . display-line-numbers-mode)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
-	("s-ö" . ebn/other-buffer)))
+	("s-ö" . mode-line-other-buffer)
+	("C-c t c" . calc)
+	("C-c t p" . proced)
+	("C-c w u" . winner-undo)
+	("C-," . completion-at-point)))
+
+(use-package eshell
+  :ensure nil
+  :commands (eshell)
+  :config
+  (defalias 'openo 'find-file-other-frame)
+  (defun eshell/open (file) (find-file file))
+  :hook
+  (eshell-mode . paredit-mode)
+  :bind (:map eshell-mode-map
+	      ("C-l" . (lambda () (interactive)
+			 (eshell/clear-scrollback)))))
 
 (use-package so-long
   :defer 10
@@ -83,8 +113,9 @@
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
 	dired-dwim-target t
-	dired-omit-files "^\\..*$"
+	dired-omit-files "^\\..*$\\|^_.*$"
 	delete-by-moving-to-trash t)
+
   (add-hook 'dired-mode-hook #'dired-omit-mode)
   :bind*
   ("C-x d" . dired)
@@ -94,13 +125,6 @@
 	("-" . dired-up-directory)
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)))
-
-(use-package outline
-  :ensure nil
-  :commands 'outline-minor-mode
-  :bind
-  ("C-c t o" . outline-minor-mode)
-  ("C-<tab>" . outline-cycle))
 
 (use-package save-hist
   :ensure nil
@@ -129,11 +153,14 @@
   :ensure nil
   :init
   (repeat-mode 1)
+  :custom
+  (repeat-echo-function #'ignore)
+  (repeat-exit-timeout nil)
   :config
   (ebn/def-repeat-map to-word-repeat-map
 		      :keys ("f" #'forward-to-word
 			     "b" #'backward-to-word)
-		      :exit-with "RET")
+                      :exit-with "RET")
 
   (ebn/def-repeat-map forward-word-repeat-map
 		      :keys ("f" #'forward-word
@@ -149,10 +176,14 @@
   (ebn/def-repeat-map mark-sexp-repeat-map
 		      :keys ([return] #'mark-sexp))
   
-  :bind (:map isearch-mode-map
-	      ("<down>" . #'isearch-repeat-forward)
-	      ("<up>" . #'isearch-repeat-backward)))
+  (ebn/def-repeat-map backward-up-list-repeat-map
+		      :keys ([up] #'backward-up-list))
 
+  (ebn/def-repeat-map minibuffer-next-repeat-map
+		      :keys ("n" #'minibuffer-next-completion
+			     "p" #'minibuffer-previous-completion)
+		      ))
+ 
 (use-package erc
   :commands erc-tls
   :config
@@ -163,9 +194,8 @@
 	erc-hide-list '("JOIN" "PART" "QUIT")
         erc-nick "ebn"
 	erc-prompt-for-password nil)
-  ;(setq auth-sources '("~/.authinfo.gpg"))
-  (setq auth-sources '("~/.password-store"))
-  (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#000")
+  (setq auth-sources '("~/.authinfo.gpg"))
+  (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#ae95c7")
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
 
 (use-package mindre-theme
@@ -173,8 +203,12 @@
   :load-path "themes/"
   :custom
   (mindre-use-more-fading nil)
+  (mindre-use-more-bold nil)
+  (mindre-use-faded-lisp-parens t)
+  :custom-face
+  (mindre-heading-1 ((t (:height 1.2))))
   :config
-  (load-theme 'mindre t))
+  (load-theme 'mindre-dark t))
 
 ;;; Backups
 (use-package no-littering
@@ -192,33 +226,34 @@
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
 ;;; Completion
-(use-package corfu
-  :custom
-  (corfu-auto-delay 0.2)
-  (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-commit-predicate nil)
-  (corfu-quit-at-boundary t)
-  (corfu-quit-no-match t)
-  (corfu-echo-documentation nil)
-  :init
-  (global-corfu-mode))
+(unless (version<= "29" emacs-version)
+ (use-package corfu
+   :custom
+   (corfu-auto-delay 0.2)
+   (corfu-cycle t)
+   (corfu-auto t)
+   (corfu-commit-predicate nil)
+   (corfu-quit-at-boundary t)
+   (corfu-quit-no-match t)
+   (corfu-echo-documentation nil)
+   :init
+   (global-corfu-mode))
 
-(use-package corfu-doc
-  :ensure t
-  :config
-  (add-hook 'corfu-mode-hook #'corfu-doc-mode)
-  :bind (:map corfu-map
-	      ("M-d" . corfu-doc-toggle)))
+ (use-package corfu-doc
+   :ensure t
+   :config
+   (add-hook 'corfu-mode-hook #'corfu-doc-mode)
+   :bind (:map corfu-map
+	       ("M-d" . corfu-doc-toggle)))
 
-(use-package vertico
-  :ensure
-  :init
-  (vertico-mode))
+ (use-package vertico
+   :ensure
+   :init
+   (vertico-mode)))
 
 (use-package orderless
   :commands (orderless)
-  :custom (completion-styles '(orderless flex)))
+  :custom (completion-styles '(orderless)))
 
 (use-package consult
   :ensure t
@@ -237,7 +272,8 @@
 	("C-c C-l" . consult-history)))
 
 (use-package cape
-  :after corfu
+  :disabled
+  ;:after corfu
   :bind (("C-c p i" . cape-ispell)
 	 ("C-c p d" . cape-dabbrev)
 	 ("C-c p f" . cape-file)
@@ -275,7 +311,7 @@
 
   :config
   (require 'org-mouse)
-  (plist-put org-format-latex-options :scale 1.5)
+  (plist-put org-format-latex-options :scale 1.7)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((maxima . t)
@@ -288,7 +324,7 @@
   :custom
   (org-confirm-babel-evaluate nil)
   (org-startup-indented t)
-  (org-startup-with-latex-preview t)
+  ;(org-startup-with-latex-preview t)
   (org-pretty-entities t)
   (org-startup-with-inline-images t)
   (org-ellipsis " …")
@@ -303,6 +339,9 @@
   (org-image-actual-width nil)
   (org-return-follows-link t)
   (org-hide-emphasis-markers t)
+  (org-hide-leading-stars t)
+  (org-log-repeat nil)
+  (org-log-done nil)
   (org-latex-listings 'minted)
   (org-latex-packages-alist '(("" "minted")))
   (org-latex-tables-centered t)
@@ -311,7 +350,7 @@
 		       (sequence "BACKLOG(b)" "ACTIVE(a)"
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
 				 "|" "DELEGATED(D)" "CANCELLED(c)")))
-  (org-agenda-current-time-string "← now ─────────────────")
+  (org-agenda-current-time-string "← now ─────────")
   (org-agenda-files '("gtd.org" "someday.org" "tickler.org"))
   (org-capture-templates
    '(("i" "Inbox" entry (file "~/org/inbox.org"))
@@ -347,6 +386,8 @@
 		       (setq cursor-type 'box)
 		       (org-cdlatex-mode)
 		       (ebn/--setup-variable-fonts)))))
+
+(use-package org-transclusion)
 
 (use-package org-modern
   :custom
@@ -402,7 +443,8 @@
   :interpreter ("maxima" . maxima-mode))
 
 (use-package julia-mode
-  :ensure
+  :init
+  (setenv "JULIA_NUM_THREADS" "8")
   :config
   (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
   (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm)
@@ -415,33 +457,16 @@
   (julia-snail-repl-display-eval-results nil)
   :hook (julia-mode . julia-snail-mode))
 
-(use-package julia-vterm :disabled)
-(use-package ob-julia-vterm :disabled)
-
-(use-package julia-repl
-  :disabled
-  :ensure t
-  :hook (julia-mode . julia-repl-mode)
-
-  :init
-  (setenv "JULIA_NUM_THREADS" "8")
-
-  :config
-  ;; Set the terminal backend
-  (julia-repl-set-terminal-backend 'vterm)
-  
-  ;; Keybindings for quickly sending code to the REPL
-  (define-key julia-repl-mode-map (kbd "<C-RET>") 'my/julia-repl-send-cell)
-  (define-key julia-repl-mode-map (kbd "<M-RET>") 'julia-repl-send-line)
-  (define-key julia-repl-mode-map (kbd "<S-return>") 'julia-repl-send-buffer))
-
 (use-package cdlatex)
 
 (use-package org-auctex
   :load-path "lisp/"
   :custom
   (preview-scale-function 1.7)
+  :config
   :hook (org-mode . org-auctex-mode))
+
+(use-package gnuplot)
 
 ;;; Lisp
 (use-package paredit
@@ -450,6 +475,7 @@
   (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
   :config (define-key paredit-mode-map [remap paredit-newline] nil)
   :bind (:map paredit-mode-map
+	      ("C-<left>" . paredit-backward-slurp-sexp)
 	      ("M-<left>" . paredit-backward-barf-sexp)
 	      ("M-<right>" . paredit-forward-barf-sexp)
 	      ("M-7" . paredit-wrap-curly)
@@ -458,27 +484,43 @@
 	      ("C-9" . paredit-forward)))
 
 (use-package racket-mode
+  :ensure t
   :config
-  (defun setup-racket-eldoc ()
-    (eldoc-mode +1)
-    (setq eldoc-documentation-function #'racket-xp-eldoc-function))
+  ;; (defun setup-racket-eldoc ()
+  ;;   (eldoc-mode +1)
+  ;;   (setq eldoc-documentation-function #'racket-xp-eldoc-function))
 
   (add-hook 'racket-mode-hook      #'racket-unicode-input-method-enable)
   (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
-  (add-hook 'racket-mode-hook      #'setup-racket-eldoc)
+;  (add-hook 'racket-mode-hook      #'setup-racket-eldoc)
   (add-hook 'racket-mode-hook      #'racket-xp-mode)
   (add-hook 'racket-mode-hook      #'paredit-mode))
 
 ;;; Haskell
 (use-package haskell-mode
+  :config
+  (defun ebn/haskell-mode-setup ()
+    (interactive-haskell-mode)
+    (haskell-indent-mode))
   :custom
   (haskell-font-lock-symbols t)
+  (haskell-process-suggest-remove-import-lines t)
+  (haskell-process-auto-import-loaded-modules t)
+  (haskell-process-suggest-imports)
+  (haskell-process-log t)
+  (haskell-tags-on-save nil)
+  :bind
+  ("C-h t" . haskell-mode-show-type-at)
+  (:map haskell-mode-map
+	("RET" . electric-newline-and-maybe-indent))
   :hook
-  (haskell-mode . interactive-haskell-mode))
+  (haskell-mode . ebn/haskell-mode-setup))
 
 ;;; Mail
 (use-package notmuch
   :ensure nil
+  :init
+  (setq epg-pinentry-mode 'loopback)
   :custom
   (notmuch-saved-searches
    '((:name "inbox" :query "tag:inbox" :key "i")
@@ -489,7 +531,17 @@
      (:name "all mail" :query "*" :key "a")
      (:name "kau" :query "tag:kau" :key "k")
      (:name "today" :query "date:today" :key "t")
-     (:name "study" :query "tag:study" :key "S"))))
+     (:name "study" :query "tag:study" :key "S")
+     (:name "deleted" :query "tag:deleted" :key "D")))
+  :bind
+  ("C-c m" . notmuch)
+  (:map notmuch-search-mode-map
+	("d" . (lambda ()
+		 (interactive)
+		 (notmuch-search-add-tag '("+deleted"))))))
+
+(use-package org-notmuch
+  :load-path "lisp/")
 
 (use-package smtpmail
   :config
@@ -509,25 +561,12 @@
   :commands (efleed elfeed-update)
   :custom
   (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
-		  ("https://sachachua.com/blog/feed/" emacs))))
+		  ("https://sachachua.com/blog/feed/" emacs)
+		  ;("http://www.reddit.com/r/emacs/.rss" emacs)
+		  )))
 
 (use-package vterm)
 (use-package rainbow-mode)
-
-(use-package tempel
-  :custom
-  (tempel-trigger-prefix "<")
-  :init
-  (defun tempel-setup-capf ()
-    (setq-local completion-at-point-functions
-                (cons #'tempel-expand
-                      completion-at-point-functions)))
-
-  (add-hook 'prog-mode-hook 'tempel-setup-capf)
-  (add-hook 'text-mode-hook 'tempel-setup-capf)
-  (add-hook 'org-mode-hook 'tempel-setup-capf)
-  :bind (("s-+" . tempel-expand)
-         ("s-*" . tempel-insert)))
 
 (use-package sv-kalender
   :ensure nil
@@ -535,10 +574,16 @@
   :load-path "lisp/")
 
 (use-package pdf-tools
-  :defer t
   :ensure t
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
   :mode ("\\.pdf\\'" . pdf-view-mode)
+  :init
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+	TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+	TeX-source-correlate-start-server t)
+
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
   :config
   (pdf-tools-install))
 
@@ -589,22 +634,61 @@ surrounded by word boundaries."
     (define-key reb-lisp-mode-map (kbd "RET") #'reb-replace-regexp)
     (global-set-key (kbd "C-M-%") #'re-builder)))
 
-(use-package olivetti
-  :defer t
-  :commands 'olivetti-mode
-  :custom
-  (olivetti-body-width 100)
-  :config
-  (ebn/def-repeat-map olivetti-expand-repeat-map
-		      :keys ("C-c {" #'olivetti-shrink
-			     "C-c }" #'olivetti-expand)))
+(defun ebn/eix-next (&optional arg)
+  (interactive)
+  (ignore-errors
+    (if arg
+       (progn
+	 (forward-line -1)
+	 (search-backward-regexp "^*"))
+     (forward-line)
+     (search-forward-regexp "^*"))))
+
+(defun ebn/eix-prev ()
+  (interactive)
+  (ebn/eix-next t))
 
 (use-package eix
   :ensure nil
-  :load-path "lisp/")
+  :load-path "lisp/"
+  :bind* (:map eix-browse-mode-map
+	       ("C-n" . ebn/eix-next)
+	       ("C-p" . ebn/eix-prev)
+	       ("C-<up>" . backward-paragraph)
+	       ("C-<down>" . forward-paragraph)))
+
+(use-package embark
+  :ensure t
+  :bind
+  (("C-." . embark-act)
+   ;;        ("C-," . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings))
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
 (use-package package-lint)
-
 (use-package keycast)
+(use-package embark-consult)
+(use-package wgrep)
 
-(use-package diredfl)
+(use-package yasnippet
+  :config
+  (with-eval-after-load 'warnings
+  (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
+              :test 'equal)))
+
+(use-package yasnippet-snippets :disabled)
+
+(use-package marginalia
+  :init
+  (marginalia-mode))
+
+(use-package rust-mode)
