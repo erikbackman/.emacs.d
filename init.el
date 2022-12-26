@@ -1,14 +1,11 @@
+(add-hook 'after-init-hook (lambda () (list-bookmarks)))
+(setq initial-buffer-choice (lambda nil (get-buffer "*Bookmark List*")))
+
 ;;; Package Management
 (require 'package)
-
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 (setq package-native-compile t)
-
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
 (setq use-package-always-ensure t)
 
 ;;; Misc settings
@@ -44,7 +41,6 @@
   (midnight-mode t)
   (eshell-destroy-buffer-when-process-dies t)
   (tab-always-indent 'complete)
-;  (inhibit-splash-screen t)
   :init
   (put 'narrow-to-region 'disabled nil)
   (when (version<= "29" emacs-version)
@@ -73,7 +69,7 @@
 	("s-r" . replace-string)
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
-	("M-g M-g" . consult-goto-line)
+	("M-g" . consult-goto-line)
 	("C-c t l" . display-line-numbers-mode)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
@@ -82,25 +78,26 @@
 	("s-ö" . mode-line-other-buffer)
 	("C-c t c" . calc)
 	("C-c t p" . proced)
+	("C-<tab>" . hippie-expand)
 	("C-c w u" . winner-undo)
 	("C-," . completion-at-point)))
 
 (use-package eshell
   :ensure nil
   :commands (eshell)
+  :requires (esh-mode)
   :config
   (defalias 'openo 'find-file-other-frame)
   (defun eshell/open (file) (find-file file))
   :hook
   (eshell-mode . paredit-mode)
-  :bind (:map eshell-mode-map
-	      ("C-l" . (lambda () (interactive)
-			 (eshell/clear-scrollback)))))
-
-(use-package so-long
-  :defer 10
-  :init
-  (global-so-long-mode 1))
+  
+  :bind
+  ("C-c t e" . eshell)
+  (:map eshell-mode-map
+	("C-l" . (lambda () (interactive)
+		   (eshell/clear-scrollback)
+		   (eshell-emit-prompt)))))
 
 (use-package proced
   :commands proced
@@ -111,6 +108,11 @@
   :ensure nil
   :config
   (require 'dired-x)
+  (defun ebn/dired-copy-file-name (&optional ARG)
+    (interactive)
+    (let ((fn (dired-get-filename)))
+      (kill-new fn)
+      (message "%s saved to kill-ring." fn)))
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
 	dired-dwim-target t
@@ -125,7 +127,8 @@
 	(")" . dired-omit-mode)
 	("-" . dired-up-directory)
 	("q" . (lambda () (interactive) (quit-window t)))
-	("e" . wdired-change-to-wdired-mode)))
+	("e" . wdired-change-to-wdired-mode)
+	("w" . ebn/dired-copy-file-name)))
 
 (use-package save-hist
   :ensure nil
@@ -227,31 +230,6 @@
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
 ;;; Completion
-(unless (version<= "29" emacs-version)
- (use-package corfu
-   :custom
-   (corfu-auto-delay 0.2)
-   (corfu-cycle t)
-   (corfu-auto t)
-   (corfu-commit-predicate nil)
-   (corfu-quit-at-boundary t)
-   (corfu-quit-no-match t)
-   (corfu-echo-documentation nil)
-   :init
-   (global-corfu-mode))
-
- (use-package corfu-doc
-   :ensure t
-   :config
-   (add-hook 'corfu-mode-hook #'corfu-doc-mode)
-   :bind (:map corfu-map
-	       ("M-d" . corfu-doc-toggle)))
-
- (use-package vertico
-   :ensure
-   :init
-   (vertico-mode)))
-
 (use-package orderless
   :commands (orderless)
   :custom (completion-styles '(orderless)))
@@ -271,28 +249,6 @@
 	("C-c x" . consult-complex-command))
   (:map comint-mode-map
 	("C-c C-l" . consult-history)))
-
-(use-package cape
-  :disabled
-  ;:after corfu
-  :bind (("C-c p i" . cape-ispell)
-	 ("C-c p d" . cape-dabbrev)
-	 ("C-c p f" . cape-file)
-	 ("s-7" . cape-file)
-	 ("C-c p l" . cape-line)
-	 ("C-c p \\" . cape-tex))
-  :config
-  ;; Silence then pcomplete capf, no errors or messages!
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-
-  ;; Ensure that pcomplete does not write to the buffer
-  ;; and behaves as a pure `completion-at-point-function'.
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
-
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  (add-to-list 'completion-at-point-functions #'cape-file))
 
 ;;; Org
 (use-package org
@@ -377,7 +333,7 @@
   (:map org-mode-map
 	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
-	("C-<tab>" . org-cycle))
+	("C-<tab>" . hippie-expand))
   (:map global-map
 	("C-c n n" . org-capture)
 	("C-c n a" . org-agenda))
@@ -409,7 +365,7 @@
 
   :custom
   (org-roam-directory "~/org/org-roam")
-  (org-roam-completion-everywhere t) 
+  (org-roam-completion-everywhere t)
   (org-roam-capture-templates
    `(("d" "default" plain "%?"
       :if-new (file+head
@@ -458,7 +414,9 @@
   (julia-snail-repl-display-eval-results nil)
   :hook (julia-mode . julia-snail-mode))
 
-(use-package cdlatex)
+(use-package cdlatex
+  :bind (:map LaTeX-mode-map
+	      ("C-c t m" . cdlatex-mode)))
 
 (use-package org-auctex
   :load-path "lisp/"
@@ -487,13 +445,8 @@
 (use-package racket-mode
   :ensure t
   :config
-  ;; (defun setup-racket-eldoc ()
-  ;;   (eldoc-mode +1)
-  ;;   (setq eldoc-documentation-function #'racket-xp-eldoc-function))
-
   (add-hook 'racket-mode-hook      #'racket-unicode-input-method-enable)
   (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
-;  (add-hook 'racket-mode-hook      #'setup-racket-eldoc)
   (add-hook 'racket-mode-hook      #'racket-xp-mode)
   (add-hook 'racket-mode-hook      #'paredit-mode))
 
@@ -503,11 +456,11 @@
   (defun ebn/haskell-mode-setup ()
     (interactive-haskell-mode)
     (haskell-indent-mode))
+  (defun haskell-mode-after-save-handler ()
+      (ignore-errors (haskell-process-reload)))
   :custom
   (haskell-font-lock-symbols t)
-  (haskell-process-suggest-remove-import-lines t)
   (haskell-process-auto-import-loaded-modules t)
-  (haskell-process-suggest-imports)
   (haskell-process-log t)
   (haskell-tags-on-save nil)
   :bind
@@ -537,12 +490,10 @@
   :bind
   ("C-c m" . notmuch)
   (:map notmuch-search-mode-map
+	("<mouse-8>" . notmuch-bury-or-kill-this-buffer)
 	("d" . (lambda ()
 		 (interactive)
 		 (notmuch-search-add-tag '("+deleted"))))))
-
-(use-package org-notmuch
-  :load-path "lisp/")
 
 (use-package smtpmail
   :config
@@ -556,6 +507,8 @@
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
+(use-package org-notmuch
+  :load-path "lisp/")
 ;;; Misc
 (use-package elfeed
   :defer t
@@ -589,75 +542,6 @@
   (pdf-tools-install))
 
 ;;; Rest/WIP
-(with-eval-after-load "re-builder"
-  (progn
-    (defvar my/re-builder-positions nil
-      "Store point and region bounds before calling re-builder")
-    (advice-add 're-builder
-		:before
-		(defun my/re-builder-save-state (&rest _)
-		  "Save into `my/re-builder-positions' the point and region
-positions before calling `re-builder'."
-		  (setq my/re-builder-positions
-			(cons (point)
-                              (when (region-active-p)
-				(list (region-beginning)
-                                      (region-end)))))))
-
-    (defun reb-replace-regexp (&optional delimited)
-      "Run `query-replace-regexp' with the contents of re-builder. With
-non-nil optional argument DELIMITED, only replace matches
-surrounded by word boundaries."
-      (interactive "P")
-      (reb-update-regexp)
-      (let* ((re (reb-target-binding reb-regexp))
-             (replacement (query-replace-read-to
-			   re
-			   (concat "Query replace"
-				   (if current-prefix-arg
-                                       (if (eq current-prefix-arg '-) " backward" " word")
-                                     "")
-				   " regexp"
-				   (if (with-selected-window reb-target-window
-					 (region-active-p))
-				       " in region" ""))
-			   t))
-             (pnt (car my/re-builder-positions))
-             (beg (cadr my/re-builder-positions))
-             (end (caddr my/re-builder-positions)))
-	(with-selected-window reb-target-window
-	  (goto-char pnt)
-	  (setq my/re-builder-positions nil)
-	  (reb-quit)
-	  (query-replace-regexp re replacement delimited beg end))))
-
-    (define-key reb-mode-map (kbd "RET") #'reb-replace-regexp)
-    (define-key reb-lisp-mode-map (kbd "RET") #'reb-replace-regexp)
-    (global-set-key (kbd "C-M-%") #'re-builder)))
-
-(defun ebn/eix-next (&optional arg)
-  (interactive)
-  (ignore-errors
-    (if arg
-       (progn
-	 (forward-line -1)
-	 (search-backward-regexp "^*"))
-     (forward-line)
-     (search-forward-regexp "^*"))))
-
-(defun ebn/eix-prev ()
-  (interactive)
-  (ebn/eix-next t))
-
-(use-package eix
-  :ensure nil
-  :load-path "lisp/"
-  :bind* (:map eix-browse-mode-map
-	       ("C-n" . ebn/eix-next)
-	       ("C-p" . ebn/eix-prev)
-	       ("C-<up>" . backward-paragraph)
-	       ("C-<down>" . forward-paragraph)))
-
 (use-package embark
   :ensure t
   :bind
@@ -681,15 +565,42 @@ surrounded by word boundaries."
 (use-package wgrep)
 
 (use-package yasnippet
+  :custom
+  (yas-snippet-dirs '("/home/ebn/.emacs.d/etc/yasnippet/snippets"))
   :config
   (with-eval-after-load 'warnings
   (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
               :test 'equal)))
-
-(use-package yasnippet-snippets :disabled)
 
 (use-package marginalia
   :init
   (marginalia-mode))
 
 (use-package rust-mode)
+
+(use-package koka-mode
+  :load-path "lisp/"
+  :mode "\\.kk\\'"
+  :hook (koka-mode . (lambda ()
+		       (interactive)
+		       (setq-local
+			indent-tabs-mode nil
+			tab-width 2
+			tab-stop-list '(2 4)
+			tab-always-indent t
+			indent-line-function 'insert-tab))))
+
+(defun eval-and-replace ()
+  "Replace the preceding sexp with its value."
+  (interactive)
+  (backward-kill-sexp)
+  (condition-case nil
+      (prin1 (eval (read (current-kill 0)))
+             (current-buffer))
+    (error (message "Invalid expression")
+           (insert (current-kill 0)))))
+
+(use-package tree-sitter-langs
+  :config
+  (tree-sitter-require 'haskell))
+
