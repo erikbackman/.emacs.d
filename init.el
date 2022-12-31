@@ -6,6 +6,13 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 (setq package-native-compile t)
+
+;;; use-package is built-in to Emacs 29.0.60
+;;; I should remove this eventually.
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)              
+  (package-install 'use-package))
+
 (setq use-package-always-ensure t)
 
 ;;; Misc settings
@@ -339,7 +346,7 @@
 	("C-c n a" . org-agenda))
 
   :hook ((org-mode . (lambda ()
-		       (setq line-spacing .2)
+		       (setq line-spacing nil)
 		       (setq cursor-type 'box)
 		       (org-cdlatex-mode)
 		       (ebn/--setup-variable-fonts)))))
