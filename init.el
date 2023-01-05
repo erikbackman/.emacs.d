@@ -232,7 +232,8 @@
   (setq no-littering-var-directory
 	(expand-file-name "data/" user-emacs-directory))
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (unless (recentf-mode))
+  (unless (recentf-mode)
+    (recentf-mode))
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory))
 
