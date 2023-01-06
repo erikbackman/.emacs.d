@@ -273,32 +273,37 @@
   :commands (org-agenda
 	     org-capture
 	     org-cdlatex-mode)
-  :init (progn
-	  (defun ebn/diary-last-day-of-month (date)
-	    "Return `t` if DATE is the last day of the month."
-	    (let* ((day (calendar-extract-day date))
-		   (month (calendar-extract-month date))
-		   (year (calendar-extract-year date))
-		   (last-day-of-month
-		    (calendar-last-day-of-month month year)))
-	      (= day last-day-of-month))))
-
   :config
   (require 'org-mouse)
+  (require 'ebn-org-latex)
+
+  (defun ebn/org-cdlatex-tab ()
+    (interactive)
+    (if (eobp) (org-edit-src-exit)
+      (cdlatex-tab)))
+
+  (defun ebn/diary-last-day-of-month (date)
+    "Return `t` if DATE is the last day of the month."
+    (let* ((day (calendar-extract-day date))
+	   (month (calendar-extract-month date))
+	   (year (calendar-extract-year date))
+	   (last-day-of-month
+	    (calendar-last-day-of-month month year)))
+      (= day last-day-of-month)))
+  
   (plist-put org-format-latex-options :scale 1.7)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((maxima . t)
      (julia . t)
      (haskell . t)))
-  (setq org-confirm-babel-evaluate nil)
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
   ;; Options
   :custom
   (org-confirm-babel-evaluate nil)
+  (org-confirm-babel-evaluate nil)
   (org-startup-indented t)
-  ;(org-startup-with-latex-preview t)
   (org-pretty-entities t)
   (org-startup-with-inline-images t)
   (org-ellipsis " …")
@@ -336,21 +341,12 @@
      ("j" "Journal: Today" function #'org-roam-dailies-capture-today)
      ("J" "Journal: Tomorrow" function #'org-roam-dailies-capture-tomorrow)
      ("d" "Journal: Date" function #'org-roam-dailies-capture-date)))
-  (org-latex-pdf-process
-   ;; The reason why this is a list is that it usually takes several
-   ;; runs of ‘pdflatex’, maybe mixed with a call to ‘bibtex’.  Org
-   ;; does not have a clever mechanism to detect which of these
-   ;; commands have to be run to get to a stable result, and it also
-   ;; does not do any error checking.
-   ;;      "biber %b"
-   '("luatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "luatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-     "luatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
   :bind*
   (:map org-mode-map
 	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
-	("C-<tab>" . hippie-expand))
+	("C-<tab>" . hippie-expand)
+	("C-c e" . org-latex-export-to-pdf))
   (:map global-map
 	("C-c n n" . org-capture)
 	("C-c n a" . org-agenda))
@@ -362,6 +358,7 @@
 		       (ebn/--setup-variable-fonts)))))
 
 (use-package org-transclusion)
+(use-package org-drill)
 
 (use-package org-modern
   :custom
@@ -372,7 +369,6 @@
 (use-package org-roam
   :defer t
   :commands (org-roam-node-find org-roam-capture)
-
   :init
   (setq org-roam-v2-ack t) ;; Disable v2-migration-prompt
 
@@ -407,6 +403,7 @@
   (org-roam-db-autosync-mode))
 
 ;;; LaTeX and math
+(use-package gnuplot)
 (use-package gnuplot-mode)
 (use-package maxima
   :init
@@ -432,36 +429,47 @@
   :hook (julia-mode . julia-snail-mode))
 
 (use-package cdlatex
-  :bind (:map LaTeX-mode-map
-	      ("C-c t m" . cdlatex-mode)))
+  :hook
+  (LaTeX-mode . cdlatex-mode)
+  (LaTeX-mode . yas-minor-mode-on)
+  :bind*
+  (:map LaTeX-mode-map
+	("C-c t m" . cdlatex-mode))
+  (:map org-src-mode-map
+	("<tab>" . ebn/org-cdlatex-tab)))
 
 (use-package org-auctex
   :load-path "lisp/"
+  :disabled
   :custom
   (preview-scale-function 1.7)
   :config
   :hook (org-mode . org-auctex-mode))
-
-(use-package gnuplot)
 
 ;;; Lisp
 (use-package paredit
   :init
   (add-hook 'lisp-mode-hook #'paredit-mode)
   (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
-  :config (define-key paredit-mode-map [remap paredit-newline] nil)
+  :config
+  (define-key paredit-mode-map [remap paredit-newline] nil)
   :bind (:map paredit-mode-map
 	      ("C-<left>" . paredit-backward-slurp-sexp)
 	      ("M-<left>" . paredit-backward-barf-sexp)
 	      ("M-<right>" . paredit-forward-barf-sexp)
 	      ("M-7" . paredit-wrap-curly)
-	      ("M-8" . paredit-wrap-round)
+	      ("M-8" . paredit-wrap-square)
 	      ("C-8" . paredit-backward)
 	      ("C-9" . paredit-forward)))
 
 (use-package racket-mode
   :ensure t
   :config
+  (add-hook 'racket-xp-mode-hook
+            (lambda ()
+              (remove-hook 'pre-redisplay-functions
+                           #'racket-xp-pre-redisplay
+                           t)))
   (add-hook 'racket-mode-hook      #'racket-unicode-input-method-enable)
   (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
   (add-hook 'racket-mode-hook      #'racket-xp-mode)
@@ -479,7 +487,7 @@
   (haskell-font-lock-symbols t)
   (haskell-process-auto-import-loaded-modules t)
   (haskell-process-log t)
-  (haskell-tags-on-save nil)
+  (haskell-tags-on-save t)
   :bind
   ("C-h t" . haskell-mode-show-type-at)
   (:map haskell-mode-map
@@ -532,9 +540,7 @@
   :commands (efleed elfeed-update)
   :custom
   (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
-		  ("https://sachachua.com/blog/feed/" emacs)
-		  ;("http://www.reddit.com/r/emacs/.rss" emacs)
-		  )))
+		  ("https://sachachua.com/blog/feed/" emacs))))
 
 (use-package vterm)
 (use-package rainbow-mode)
@@ -555,6 +561,8 @@
 
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
+  :hook
+  (pdf-view-moe . auto-revert-mode)
   :config
   (pdf-tools-install))
 
@@ -563,12 +571,9 @@
   :ensure t
   :bind
   (("C-." . embark-act)
-   ;;        ("C-," . embark-dwim)        ;; good alternative: M-.
    ("C-h B" . embark-bindings))
   :init
-  ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
-
   :config
   ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
@@ -576,24 +581,18 @@
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-(use-package package-lint)
-(use-package keycast)
-(use-package embark-consult)
-(use-package wgrep)
-
 (use-package yasnippet
   :custom
   (yas-snippet-dirs '("/home/ebn/.emacs.d/etc/yasnippet/snippets"))
   :config
   (with-eval-after-load 'warnings
-  (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
-              :test 'equal)))
+    (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
+		:test 'equal))
+  (yas-global-mode))
 
 (use-package marginalia
   :init
   (marginalia-mode))
-
-(use-package rust-mode)
 
 (use-package koka-mode
   :load-path "lisp/"
@@ -607,17 +606,25 @@
 			tab-always-indent t
 			indent-line-function 'insert-tab))))
 
-(defun eval-and-replace ()
-  "Replace the preceding sexp with its value."
-  (interactive)
-  (backward-kill-sexp)
-  (condition-case nil
-      (prin1 (eval (read (current-kill 0)))
-             (current-buffer))
-    (error (message "Invalid expression")
-           (insert (current-kill 0)))))
+(use-package rust-mode)
+(use-package package-lint)
+(use-package keycast)
+(use-package embark-consult)
+(use-package wgrep)
 
-(use-package tree-sitter-langs
+(use-package avy
+  :commands (avy-goto-char-timer)
+  :bind ("C-ö" . avy-goto-char-timer))
+
+(use-package tree-sitter
+  :ensure nil
   :config
-  (tree-sitter-require 'haskell))
+  (tree-sitter-require 'haskell)
+  (tree-sitter-require 'rust)
+  (tree-sitter-require 'python)
+  (global-tree-sitter-mode)
+  :hook
+  (haskell-mode . tree-sitter-hl-mode)
+  (rust-mode . tree-sitter-hl-mode))
+
 
