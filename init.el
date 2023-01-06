@@ -242,22 +242,20 @@
 	(expand-file-name "config/" user-emacs-directory))
   (setq no-littering-var-directory
 	(expand-file-name "data/" user-emacs-directory))
-  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (unless (recentf-mode)
-    (recentf-mode))
-  (add-to-list 'recentf-exclude no-littering-var-directory)
-  (add-to-list 'recentf-exclude no-littering-etc-directory))
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory)))
 
 ;;; Completion
 (use-package orderless
   :commands (orderless)
-  :custom (completion-styles '(orderless)))
+  :custom (completion-styles '(orderless flex)))
 
 (use-package consult
   :ensure t
-  :init
-  (setq consult-preview-key nil)
-  (recentf-mode)
+  :custom
+  (consult-preview-key nil)
+  (recentf-mode t)
+  :config
+  (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :bind
   (:map global-map
 	("C-c r" . consult-recent-file)
