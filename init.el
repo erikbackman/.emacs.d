@@ -275,7 +275,6 @@
 	     org-cdlatex-mode)
   :config
   (require 'org-mouse)
-  (require 'ebn-org-latex)
 
   (defun ebn/org-cdlatex-tab ()
     (interactive)
@@ -356,6 +355,10 @@
 		       (setq cursor-type 'box)
 		       (org-cdlatex-mode)
 		       (ebn/--setup-variable-fonts)))))
+
+(use-package ebn-org-latex
+  :load-path "lisp/"
+  :after org)
 
 (use-package org-transclusion)
 (use-package org-drill)
