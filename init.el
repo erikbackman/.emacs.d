@@ -78,6 +78,7 @@
 	("M-c" . capitalize-dwim)
 	("M-g" . consult-goto-line)
 	("C-c t l" . display-line-numbers-mode)
+	("C-h ," . xref-find-definitions)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
@@ -87,6 +88,8 @@
 	("C-c t p" . proced)
 	("C-<tab>" . hippie-expand)
 	("C-c w u" . winner-undo)
+	("s-<up>" . scroll-other-window-down)
+	("s-<down>" . scroll-other-window)
 	("C-," . completion-at-point)))
 
 (use-package eshell
