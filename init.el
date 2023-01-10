@@ -93,10 +93,12 @@
 	("C-," . completion-at-point)))
 
 (use-package eshell
-  :ensure nil
   :commands (eshell)
-  :requires (esh-mode)
-  :config
+  :preface
+  (require 'esh-mode)
+  :custom
+  (eshell-destroy-buffer-when-process-dies t)
+  :config  
   (defun eshell-load-bash-aliases ()
     "Read Bash aliases and add them to the list of eshell aliases."
     (with-temp-buffer
@@ -105,7 +107,7 @@
       (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
         (eshell/alias (match-string 1) (match-string 2)))))
   (defalias 'openo 'find-file-other-frame)
-  (defun eshell/open (file) (find-file file))
+  (defun eshell/ff (file) (find-file file))
   :hook
   (eshell-mode . paredit-mode)
   (eshell-mode . eshell-load-bash-aliases)
