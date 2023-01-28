@@ -586,7 +586,7 @@
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
   :hook
-  (pdf-view-moe . auto-revert-mode)
+  (pdf-view-mode . auto-revert-mode)
   :config
   (pdf-tools-install))
 
