@@ -1,1 +1,0 @@
-/home/ebn/src/koka/support/emacs/koka-mode.el

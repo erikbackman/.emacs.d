@@ -620,18 +620,6 @@
   :init
   (marginalia-mode))
 
-(use-package koka-mode
-  :load-path "lisp/"
-  :mode "\\.kk\\'"
-  :hook (koka-mode . (lambda ()
-		       (interactive)
-		       (setq-local
-			indent-tabs-mode nil
-			tab-width 2
-			tab-stop-list '(2 4)
-			tab-always-indent t
-			indent-line-function 'insert-tab))))
-
 (use-package embark-consult)
 (use-package wgrep)
 
