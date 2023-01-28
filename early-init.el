@@ -22,7 +22,8 @@
 
 ;; Prevent the glimpse of un-styled Emacs by disabling these UI elements early.
 ;(push '(font . "Sarasa Mono CL-12") default-frame-alist)
-(push '(font . "JuliaMono-12") default-frame-alist) 
+;(push '(font . "JuliaMono-12") default-frame-alist)
+(push '(font . "JuliaMono-10.5") default-frame-alist)
 (push '(menu-bar-lines . 0) default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)

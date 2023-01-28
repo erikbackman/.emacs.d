@@ -20,11 +20,15 @@
       blink-cursor-blinks 2)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
+;; Treesitter grammars
+(setq treesit-language-source-alist
+      '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
+
 ;;; Functions
 (defun ebn/--setup-variable-fonts ()
   (interactive)
-  (set-face-attribute 'variable-pitch nil :font "JuliaMono-12")
-  (set-face-attribute 'fixed-pitch nil :font "JuliaMono-12"))
+  (set-face-attribute 'variable-pitch nil :font "JuliaMono-10.5")
+  (set-face-attribute 'fixed-pitch nil :font "JuliaMono-10.5"))
 
 (defun ebn/su-find-this-file ()
   (interactive)
@@ -45,22 +49,12 @@
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
   (winner-mode 1)
-  (midnight-mode t)
-  (eshell-destroy-buffer-when-process-dies t)
   (tab-always-indent 'complete)
+  (proced-format 'medium)
   :init
   (put 'narrow-to-region 'disabled nil)
-  (when (version<= "29" emacs-version)
-    (define-key minibuffer-mode-map (kbd "C-n") 'minibuffer-next-completion)
-    (define-key minibuffer-mode-map (kbd "C-p") 'minibuffer-previous-completion)
-    (define-key completion-in-region-mode-map (kbd "C-n") 'minibuffer-next-completion)
-    (define-key completion-in-region-mode-map (kbd "C-p") 'minibuffer-previous-completion)
-    (setq completions-format 'one-column)
-    (setq completions-header-format nil)
-    (setq completions-max-height 20)
-    (setq completion-auto-select 'second-tab)
-    (setq minibuffer-completion-auto-choose t))
-  
+  (global-unset-key (kbd "C-x C-p")) ; unbind the bane of my existence!
+
   :bind
   (:map global-map
 	("C-8" . backward-list)
@@ -73,9 +67,10 @@
 	("M-3" . delete-frame)
 	("s-3" . delete-frame)
 	("M-j" . join-line)
-	("s-r" . replace-string)
+	("s-r" . replace-regexp)
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
+	("M-u" . upcase-dwim)
 	("M-g" . consult-goto-line)
 	("C-c t l" . display-line-numbers-mode)
 	("C-h ," . xref-find-definitions)
@@ -90,7 +85,15 @@
 	("C-c w u" . winner-undo)
 	("s-<up>" . scroll-other-window-down)
 	("s-<down>" . scroll-other-window)
-	("C-," . completion-at-point)))
+	("C-," . completion-at-point)
+	("C-c <prior>" . beginning-of-buffer)
+	("C-c <next>" . end-of-buffer)
+	("C-x f" . find-file-other-window)
+	("C-1" . (lambda () (interactive) (bookmark-set "1")))
+	("C-2" . (lambda () (interactive) (bookmark-set "2")))
+	("C-<f1>" . (lambda () (interactive) (bookmark-jump "1")))
+	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
+	("C-x K" . kill-buffer-and-window)))
 
 (use-package eshell
   :commands (eshell)
@@ -109,7 +112,6 @@
   (defalias 'openo 'find-file-other-frame)
   (defun eshell/ff (file) (find-file file))
   :hook
-  (eshell-mode . paredit-mode)
   (eshell-mode . eshell-load-bash-aliases)
   
   :bind
@@ -118,11 +120,6 @@
 	("C-l" . (lambda () (interactive)
 		   (eshell/clear-scrollback)
 		   (eshell-emit-prompt)))))
-
-(use-package proced
-  :commands proced
-  :config
-  (setq-default proced-format 'medium))
 
 (use-package dired
   :ensure nil
@@ -148,7 +145,8 @@
 	("-" . dired-up-directory)
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)
-	("w" . ebn/dired-copy-file-name)))
+	("w" . ebn/dired-copy-file-name)
+	("?" . dired-create-empty-file)))
 
 (use-package save-hist
   :ensure nil
@@ -190,6 +188,16 @@
 		      :keys ("f" #'forward-word
 			     "b" #'backward-word)
 		      :exit-with "RET")
+  
+  (ebn/def-repeat-map forward-sexp-repeat-map
+		      :keys ("f" #'forward-sexp
+			     "b" #'backard-sexp)
+		      :exit-with "RET")
+  
+  (ebn/def-repeat-map forward-sentence-repeat-map
+		      :keys ("e" #'forward-sentence
+			     "a" #'backward-sentence)
+		      :exit-with "RET")
 
   (ebn/def-repeat-map capitalize-word-repeat-map
 		      :keys ("c" #'capitalize-word))
@@ -201,12 +209,7 @@
 		      :keys ([return] #'mark-sexp))
   
   (ebn/def-repeat-map backward-up-list-repeat-map
-		      :keys ([up] #'backward-up-list))
-
-  (ebn/def-repeat-map minibuffer-next-repeat-map
-		      :keys ("n" #'minibuffer-next-completion
-			     "p" #'minibuffer-previous-completion)
-		      ))
+		      :keys ([up] #'backward-up-list)))
  
 (use-package erc
   :commands erc-tls
@@ -227,11 +230,11 @@
   :load-path "themes/"
   :custom
   (mindre-use-more-fading nil)
-  (mindre-use-more-bold nil)
   (mindre-use-faded-lisp-parens t)
   :custom-face
   (mindre-heading-1 ((t (:height 1.2))))
   :config
+  (setq pdf-view-midnight-colors '("#141414" . "#e4e4ef"))
   (load-theme 'mindre-dark t))
 
 ;;; Backups
@@ -247,6 +250,10 @@
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory)))
 
 ;;; Completion
+(use-package vertico
+  :config
+  (vertico-mode))
+
 (use-package orderless
   :commands (orderless)
   :custom (completion-styles '(orderless flex)))
@@ -258,6 +265,12 @@
   (recentf-mode t)
   :config
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
+  (setq completion-in-region-function
+	(lambda (&rest args)
+	  (apply (if vertico-mode
+		     #'consult-completion-in-region
+		   #'completion--in-region)
+		 args)))
   :bind
   (:map global-map
 	("C-c r" . consult-recent-file)
@@ -265,7 +278,8 @@
 	("C-c l" . consult-line)
 	("C-c i" . consult-imenu)
 	("C-x b" . consult-buffer)
-	("C-c x" . consult-complex-command))
+	("C-c x" . consult-complex-command)
+	("C-c b" . consult-bookmark))
   (:map comint-mode-map
 	("C-c C-l" . consult-history)))
 
@@ -280,7 +294,9 @@
 
   (defun ebn/org-cdlatex-tab ()
     (interactive)
-    (if (eobp) (org-edit-src-exit)
+    (if (eobp) (progn
+		 (org-edit-src-exit)
+		 (org-latex-preview))
       (cdlatex-tab)))
 
   (defun ebn/diary-last-day-of-month (date)
@@ -297,7 +313,8 @@
    'org-babel-load-languages
    '((maxima . t)
      (julia . t)
-     (haskell . t)))
+     (haskell . t)
+     (gnuplot . t)))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
   ;; Options
@@ -347,10 +364,13 @@
 	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
 	("C-<tab>" . hippie-expand)
-	("C-c e" . org-latex-export-to-pdf))
+	("C-c e" . org-latex-export-to-pdf)
+	("C-c C-<up>" . org-promote-subtree)
+	("C-c C-<down>" . org-demote-subtree))
   (:map global-map
 	("C-c n n" . org-capture)
-	("C-c n a" . org-agenda))
+	("C-c n a" . org-agenda)
+	("C-c S" . org-store-link))
 
   :hook ((org-mode . (lambda ()
 		       (setq line-spacing nil)
@@ -369,6 +389,8 @@
   :custom
   (org-modern-block nil)
   (org-modern-table nil)
+  :config
+  (global-org-modern-mode)
   :hook (org-mode . org-modern-mode))
 
 (use-package org-roam
@@ -433,13 +455,15 @@
   (julia-snail-repl-display-eval-results nil)
   :hook (julia-mode . julia-snail-mode))
 
+(use-package auctex
+  :hook
+  (LaTeX-mode . turn-on-auto-fill))
+
 (use-package cdlatex
   :hook
   (LaTeX-mode . cdlatex-mode)
   (LaTeX-mode . yas-minor-mode-on)
-  :bind*
-  (:map LaTeX-mode-map
-	("C-c t m" . cdlatex-mode))
+  :bind
   (:map org-src-mode-map
 	("<tab>" . ebn/org-cdlatex-tab)))
 
@@ -488,15 +512,11 @@
     (haskell-indent-mode))
   (defun haskell-mode-after-save-handler ()
       (ignore-errors (haskell-process-reload)))
-  :custom
-  (haskell-font-lock-symbols t)
-  (haskell-process-auto-import-loaded-modules t)
-  (haskell-process-log t)
-  (haskell-tags-on-save t)
   :bind
   ("C-h t" . haskell-mode-show-type-at)
   (:map haskell-mode-map
-	("RET" . electric-newline-and-maybe-indent))
+	("RET" . electric-newline-and-maybe-indent)
+	("C-M-e" . forward-sentence))
   :hook
   (haskell-mode . ebn/haskell-mode-setup))
 
@@ -547,7 +567,6 @@
   (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
 		  ("https://sachachua.com/blog/feed/" emacs))))
 
-(use-package vterm)
 (use-package rainbow-mode)
 
 (use-package sv-kalender
@@ -587,13 +606,15 @@
                  (window-parameters (mode-line-format . none)))))
 
 (use-package yasnippet
+  :defer 5
   :custom
   (yas-snippet-dirs '("/home/ebn/.emacs.d/etc/yasnippet/snippets"))
   :config
   (with-eval-after-load 'warnings
     (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
 		:test 'equal))
-  (yas-global-mode))
+  (yas-global-mode)
+  (yas-reload-all))
 
 (use-package marginalia
   :init
@@ -611,9 +632,6 @@
 			tab-always-indent t
 			indent-line-function 'insert-tab))))
 
-(use-package rust-mode)
-(use-package package-lint)
-(use-package keycast)
 (use-package embark-consult)
 (use-package wgrep)
 
@@ -621,15 +639,4 @@
   :commands (avy-goto-char-timer)
   :bind ("C-ö" . avy-goto-char-timer))
 
-(use-package tree-sitter
-  :ensure nil
-  :config
-  (tree-sitter-require 'haskell)
-  (tree-sitter-require 'rust)
-  (tree-sitter-require 'python)
-  (global-tree-sitter-mode)
-  :hook
-  (haskell-mode . tree-sitter-hl-mode)
-  (rust-mode . tree-sitter-hl-mode))
-
-
+(use-package graphviz-dot-mode)
