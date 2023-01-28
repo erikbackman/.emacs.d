@@ -1,0 +1,29 @@
+# key: mtemplate
+# name: Math template
+# group: skeleton
+# --
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{sectsty}
+
+\author{`user-full-name`\vspace{-2ex}}
+\title{\vspace{-3.0cm}${1:Title$(capitalize yas-text)}\vspace{-2ex}}
+
+\sectionfont{\fontsize{12}{15}\underline\selectfont}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{𝚭}
+\newcommand{\Q}{\mathbb{Q}}
+
+\begin{document}
+\maketitle
+
+$0
+
+\end{document}

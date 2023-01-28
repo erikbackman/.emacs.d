@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# key: gp
+# name: gp
+# expand-env: ((yas-after-exit-snippet-hook #'org-edit-special))
+# --
+#+begin_src gnuplot :file plot.svg
+  set terminal svg enhanced
+  set output "plot.svg"
+$0
+#+end_src

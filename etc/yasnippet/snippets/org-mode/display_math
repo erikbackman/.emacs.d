@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: org-math
+# key: ma
+# expand-env: ((yas-after-exit-snippet-hook #'org-edit-special))
+# --
+\[ `(save-excursion (previous-line)(make-string (current-indentation) ?\s))`$0 \]

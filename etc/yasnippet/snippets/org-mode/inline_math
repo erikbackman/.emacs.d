@@ -1,0 +1,6 @@
+# key: mk
+# name: Inline Math
+# group: math
+# expand-env: ((yas-after-exit-snippet-hook #'org-edit-special))
+# --
+\\($0 \\)
