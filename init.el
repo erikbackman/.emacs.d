@@ -557,8 +557,6 @@
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
-(use-package org-notmuch
-  :load-path "lisp/")
 ;;; Misc
 (use-package elfeed
   :defer t
