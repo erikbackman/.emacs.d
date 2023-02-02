@@ -95,6 +95,24 @@
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
 
+(use-package repeat
+  :custom
+  (repeat-mode 1)
+  (repeat-echo-function #'ignore)
+  (repeat-exit-timeout nil)
+  :bind
+  (:repeat-map my/to-word-repeat-map
+	       ("f" . forward-to-word)
+	       ("b" . backward-to-word))
+  (:repeat-map my/forward-word-repeat-map
+	       ("f" . forward-word)
+	       ("b" . backward-word))
+  (:repeat-map my/move-by-sexp-repeat-map
+	       ("f" . forward-sexp)
+	       ("b" . backward-sexp))
+  (:repeat-map my/backward-up-list-repeat-map
+	       ([up] . backward-up-list)))
+
 (use-package eshell
   :commands (eshell)
   :preface
@@ -125,11 +143,13 @@
   :ensure nil
   :config
   (require 'dired-x)
+  
   (defun ebn/dired-copy-file-name (&optional ARG)
     (interactive)
     (let ((fn (dired-get-filename)))
       (kill-new fn)
       (message "%s saved to kill-ring." fn)))
+    
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
 	dired-dwim-target t
@@ -155,61 +175,6 @@
   (savehist-mode 1)
   :config
   (setq history-length 10))
-
-(cl-defmacro ebn/def-repeat-map (name &key keys exit-with)
-  (declare (indent 0))
-  (let ((def-repeat-map-result nil))
-    (when exit-with
-      (push `(define-key ,name ,(kbd exit-with) #'keyboard-quit)
-	    def-repeat-map-result))
-    (dolist (key (map-pairs keys))
-      (push `(define-key ,name ,(car key) ,(cdr key))
-	    def-repeat-map-result)
-      (push `(put ,(cdr key) 'repeat-map ',name)
-	    def-repeat-map-result))
-    `(progn
-       (defvar ,name (make-sparse-keymap))
-       ,@def-repeat-map-result)))
-
-(use-package repeat
-  :ensure nil
-  :init
-  (repeat-mode 1)
-  :custom
-  (repeat-echo-function #'ignore)
-  (repeat-exit-timeout nil)
-  :config
-  (ebn/def-repeat-map to-word-repeat-map
-		      :keys ("f" #'forward-to-word
-			     "b" #'backward-to-word)
-                      :exit-with "RET")
-
-  (ebn/def-repeat-map forward-word-repeat-map
-		      :keys ("f" #'forward-word
-			     "b" #'backward-word)
-		      :exit-with "RET")
-  
-  (ebn/def-repeat-map forward-sexp-repeat-map
-		      :keys ("f" #'forward-sexp
-			     "b" #'backard-sexp)
-		      :exit-with "RET")
-  
-  (ebn/def-repeat-map forward-sentence-repeat-map
-		      :keys ("e" #'forward-sentence
-			     "a" #'backward-sentence)
-		      :exit-with "RET")
-
-  (ebn/def-repeat-map capitalize-word-repeat-map
-		      :keys ("c" #'capitalize-word))
-
-  (ebn/def-repeat-map downcase-word-repeat-map
-		      :keys ("l" #'downcase-word))
-
-  (ebn/def-repeat-map mark-sexp-repeat-map
-		      :keys ([return] #'mark-sexp))
-  
-  (ebn/def-repeat-map backward-up-list-repeat-map
-		      :keys ([up] #'backward-up-list)))
  
 (use-package erc
   :commands erc-tls
