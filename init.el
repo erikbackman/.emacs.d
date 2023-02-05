@@ -284,7 +284,7 @@
   (org-startup-indented t)
   (org-pretty-entities t)
   (org-startup-with-inline-images t)
-  (org-ellipsis " …")
+  (org-ellipsis "…")
   (org-export-preserve-breaks t)
   (org-highlight-latex-and-related '(native))
   (org-src-fontify-natively t)
@@ -299,16 +299,18 @@
   (org-hide-leading-stars t)
   (org-log-repeat nil)
   (org-log-done nil)
-  (org-latex-listings 'minted)
+  (org-latex-src-block-backend 'minted)
   (org-latex-packages-alist '(("" "minted")))
   (org-latex-tables-centered t)
   (org-insert-heading-respect-content t)
+  (org-agenda-tags-column 80)
   (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
 		       (sequence "BACKLOG(b)" "ACTIVE(a)"
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
 				 "|" "DELEGATED(D)" "CANCELLED(c)")))
   (org-agenda-current-time-string "← now ─────────")
-  (org-agenda-files '("gtd.org" "someday.org" "tickler.org"))
+  (org-agenda-files `("gtd.org" "someday.org" "tickler.org"
+		      ,@(directory-files-recursively "~/Dropbox/courses/active/" ".org" t nil t)))
   (org-capture-templates
    '(("i" "Inbox" entry (file "~/org/inbox.org"))
      ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
@@ -335,8 +337,7 @@
   :hook ((org-mode . (lambda ()
 		       (setq line-spacing nil)
 		       (setq cursor-type 'box)
-		       (org-cdlatex-mode)
-		       (ebn/--setup-variable-fonts)))))
+		       (org-cdlatex-mode)))))
 
 (use-package ebn-org-latex
   :load-path "lisp/"
@@ -415,7 +416,8 @@
   (julia-snail-repl-display-eval-results nil)
   :hook (julia-mode . julia-snail-mode))
 
-(use-package auctex
+(use-package tex
+  :ensure auctex
   :hook
   (LaTeX-mode . turn-on-auto-fill))
 
