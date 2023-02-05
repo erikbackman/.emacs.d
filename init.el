@@ -47,7 +47,8 @@
   (proced-format 'medium)
   :init
   (put 'narrow-to-region 'disabled nil)
-  (global-unset-key (kbd "C-x C-p")) ; unbind the bane of my existence!
+  (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
+  (global-unset-key (kbd "C-z"))     ; and this...
 
   :bind
   (:map global-map
