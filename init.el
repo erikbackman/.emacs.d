@@ -24,12 +24,6 @@
 (setq treesit-language-source-alist
       '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
 
-;;; Functions
-(defun ebn/--setup-variable-fonts ()
-  (interactive)
-  (set-face-attribute 'variable-pitch nil :font "JuliaMono-10.5")
-  (set-face-attribute 'fixed-pitch nil :font "JuliaMono-10.5"))
-
 (defun ebn/su-find-this-file ()
   (interactive)
   (let ((cur-buffer (current-buffer)))
