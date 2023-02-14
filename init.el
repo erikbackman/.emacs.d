@@ -1,6 +1,3 @@
-(add-hook 'after-init-hook (lambda () (list-bookmarks)))
-(setq initial-buffer-choice (lambda nil (get-buffer "*Bookmark List*")))
-
 ;;; Package Management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -66,7 +63,6 @@
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
 	("M-u" . upcase-dwim)
-	("M-g" . consult-goto-line)
 	("C-c t l" . display-line-numbers-mode)
 	("C-h ," . xref-find-definitions)
 	("C-<return>" . mark-sexp)
@@ -151,6 +147,10 @@
 	dired-omit-files "^\\..*$\\|^_.*$"
 	delete-by-moving-to-trash t)
 
+  (setq dired-guess-shell-alist-user
+	'(("\\.mp4\\'" "mpv")
+	  ("\\.pdf\\'" "mupdf")))
+  
   (add-hook 'dired-mode-hook #'dired-omit-mode)
   :bind*
   ("C-x d" . dired)
@@ -245,6 +245,7 @@
 
 ;;; Org
 (use-package org
+  :pin gnu
   :defer t
   :commands (org-agenda
 	     org-capture
@@ -297,6 +298,7 @@
   (org-return-follows-link t)
   (org-hide-emphasis-markers t)
   (org-hide-leading-stars t)
+  (org-cycle-separator-lines 2)
   (org-log-repeat nil)
   (org-log-done nil)
   (org-latex-src-block-backend 'minted)
@@ -304,6 +306,8 @@
   (org-latex-tables-centered t)
   (org-insert-heading-respect-content t)
   (org-agenda-tags-column 80)
+  (org-agenda-show-inherited-tags nil)
+  (org-agenda-remove-tags t)
   (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
 		       (sequence "BACKLOG(b)" "ACTIVE(a)"
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
@@ -328,7 +332,8 @@
 	("C-<tab>" . hippie-expand)
 	("C-c e" . org-latex-export-to-pdf)
 	("C-c C-<up>" . org-promote-subtree)
-	("C-c C-<down>" . org-demote-subtree))
+	("C-c C-<down>" . org-demote-subtree)
+	("C-c 1" . org-toggle-narrow-to-subtree))
   (:map global-map
 	("C-c n n" . org-capture)
 	("C-c n a" . org-agenda)
@@ -500,7 +505,7 @@
      (:name "study" :query "tag:study" :key "S")
      (:name "deleted" :query "tag:deleted" :key "D")))
   :bind
-  ("C-c m" . notmuch)
+  ("C-c t m" . notmuch)
   (:map notmuch-search-mode-map
 	("<mouse-8>" . notmuch-bury-or-kill-this-buffer)
 	("d" . (lambda ()
@@ -584,7 +589,17 @@
 (use-package wgrep)
 
 (use-package avy
-  :commands (avy-goto-char-timer)
-  :bind ("C-ö" . avy-goto-char-timer))
+  :commands
+  (avy-goto-char-timer avy-goto-line avy-move-line)
+  :bind
+  ("C-ö" . avy-goto-char-timer)
+  ("M-g" . avy-goto-line)
+  ("C-c m" . avy-move-line)
+  (:map isearch-mode-map
+	("C-ö" . avy-isearch)))
 
 (use-package graphviz-dot-mode)
+
+(use-package ebn-course
+  :load-path "lisp/"
+  :commands (ebn/select-course))
