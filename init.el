@@ -46,6 +46,7 @@
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
   (global-unset-key (kbd "C-z"))     ; and this...
+  (global-unset-key (kbd "C-x C-z")) ; and this....
 
   :bind
   (:map global-map
