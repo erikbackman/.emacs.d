@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# key: itd
+# group: environments
+# name: \item[] (description)
+# --
+\item[${1:label}] $0

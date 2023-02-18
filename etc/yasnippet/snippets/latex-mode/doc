@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# key: doc
+# name: \documentclass
+# --
+\documentclass[$2]{${1:$$(yas/choose-value '("article" "report" "book" "letter"))}}
+
+\begin{document}
+$0
+\end{document}

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key: begin
+# group: environments
+# name: \begin{environment} ... \end{environment}
+# --
+\begin{${1:$$(yas/choose-value (mapcar 'car (LaTeX-environment-list)))}}
+$0
+\end{$1}

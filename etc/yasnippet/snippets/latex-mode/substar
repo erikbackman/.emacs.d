@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# key: sub*
+# group: sections
+# name : \subsection*
+# --
+\subsection*{${1:name}}
+$0

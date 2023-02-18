@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key: block
+# group: environments
+# name : \begin{*block} ... \end{*block}
+# --
+\begin{${1:$$(yas/choose-value '("block" "exampleblock" "alertblock"))}}{${2:Block Title}}
+
+\end{$1}

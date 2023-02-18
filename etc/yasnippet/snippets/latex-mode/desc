@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key : desc
+# group: environments
+# name : \begin{description} ... \end{description}
+# --
+\begin{description}
+\item[${1:label}] $0
+\end{description}

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# key : newgls
+# group: misc
+# name : \newglossaryentry{...}{...}
+# --
+\newglossaryentry{$1}{name={$1},
+  description={$2.}}

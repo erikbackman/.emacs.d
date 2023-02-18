@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# key: tt
+# group: font
+# name: {\tt ...}
+# --
+{\tt $1}$0

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# key: cite
+# group: references
+# name : \cite
+# --
+`(unless yas-modified-p (call-interactively 'citar-insert-citation))`

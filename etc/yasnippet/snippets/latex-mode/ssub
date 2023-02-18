@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key: ssub
+# group: sections
+# name : \subsubsection
+# --
+\subsubsection{${1:name}}
+\label{${2:"waiting for reftex-label call..."$(unless yas/modified-p (reftex-label nil 'dont-insert))}}
+$0

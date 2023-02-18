@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# key: big
+# group: math
+# name: \bigl( ... \bigr)
+# --
+\\${1:$$(yas/choose-value '("big" "Big" "bigg" "Bigg"))}l( $0  \\$1r)

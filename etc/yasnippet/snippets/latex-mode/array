@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key : arr
+# group: environments
+# name : \begin{array} ... \end{array}
+# --
+\begin{array}{$1}
+  $0
+\end{array}

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# key: binom
+# group: math
+# name: \binom{n}{k}
+# --
+\binom{${1:n}}{${2:k}}

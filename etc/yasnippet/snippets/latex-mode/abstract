@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# key : abs
+# group: sections
+# name : \abstract
+# --
+\begin{abstract}
+$0
+\end{abstract}
