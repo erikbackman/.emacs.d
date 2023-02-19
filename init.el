@@ -65,6 +65,7 @@
 	("M-c" . capitalize-dwim)
 	("M-u" . upcase-dwim)
 	("C-c t l" . display-line-numbers-mode)
+	("C-c t s" . flyspell-mode)
 	("C-h ," . xref-find-definitions)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
@@ -201,13 +202,13 @@
 ;;; Backups
 (use-package no-littering
   :ensure t
-  :init
+  :preface
   (setq auto-save-file-name-transforms
 	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
   (setq no-littering-etc-directory
-	(expand-file-name "config/" user-emacs-directory))
+	(expand-file-name "etc/" user-emacs-directory))
   (setq no-littering-var-directory
-	(expand-file-name "data/" user-emacs-directory))
+	(expand-file-name "var/" user-emacs-directory))
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory)))
 
 ;;; Completion
@@ -305,6 +306,7 @@
   (org-latex-src-block-backend 'minted)
   (org-latex-packages-alist '(("" "minted")))
   (org-latex-tables-centered t)
+  (org-preview-latex-image-directory "~/.emacs.d/var/org/latex-preview/")
   (org-insert-heading-respect-content t)
   (org-agenda-tags-column 80)
   (org-agenda-show-inherited-tags nil)
@@ -573,8 +575,6 @@
 
 (use-package yasnippet
   :defer 5
-  :custom
-  (yas-snippet-dirs '("/home/ebn/.emacs.d/etc/yasnippet/snippets"))
   :config
   (with-eval-after-load 'warnings
     (cl-pushnew '(yasnippet backquote-change) warning-suppress-types
