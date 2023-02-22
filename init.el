@@ -36,10 +36,8 @@
 ;;; Built-in Packages
 (use-package emacs
   :custom
-  (delete-selection-mode t)
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
-  (winner-mode 1)
   (tab-always-indent 'complete)
   (proced-format 'medium)
   :init
@@ -47,7 +45,6 @@
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
   (global-unset-key (kbd "C-z"))     ; and this...
   (global-unset-key (kbd "C-x C-z")) ; and this....
-
   :bind
   (:map global-map
 	("C-8" . backward-list)
@@ -88,9 +85,18 @@
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
 
+(use-package delsel
+  :ensure nil
+  :commands (set-mark-command mark-sexp)
+  :init
+  (delete-selection-mode 1))
+
 (use-package repeat
+  :ensure nil
+  :defer 2
+  :config
+  (repeat-mode t)
   :custom
-  (repeat-mode 1)
   (repeat-echo-function #'ignore)
   (repeat-exit-timeout nil)
   :bind
@@ -223,8 +229,8 @@
 (use-package consult
   :ensure t
   :custom
-  (consult-preview-key nil)
   (recentf-mode t)
+  (consult-preview-key nil)
   :config
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   (setq completion-in-region-function
@@ -342,10 +348,7 @@
 	("C-c n a" . org-agenda)
 	("C-c S" . org-store-link))
 
-  :hook ((org-mode . (lambda ()
-		       (setq line-spacing nil)
-		       (setq cursor-type 'box)
-		       (org-cdlatex-mode)))))
+  :hook (org-mode . org-cdlatex-mode))
 
 (use-package ebn-org-latex
   :load-path "lisp/"
@@ -414,8 +417,7 @@
   (setenv "JULIA_NUM_THREADS" "8")
   :config
   (defalias 'org-babel-execute:julia 'org-babel-execute:julia-vterm)
-  (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm)
-  (setq julia-program "julia1.7"))
+  (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm))
 
 (use-package julia-snail
   :ensure t
@@ -573,6 +575,8 @@
                  nil
                  (window-parameters (mode-line-format . none)))))
 
+(use-package embark-consult)
+
 (use-package yasnippet
   :defer 5
   :config
@@ -586,12 +590,13 @@
   :init
   (marginalia-mode))
 
-(use-package embark-consult)
 (use-package wgrep)
 
 (use-package avy
   :commands
   (avy-goto-char-timer avy-goto-line avy-move-line)
+  :custom
+  (avy-all-windows 't)
   :bind
   ("C-ö" . avy-goto-char-timer)
   ("M-g" . avy-goto-line)
