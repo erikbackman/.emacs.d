@@ -1,4 +1,4 @@
-;;; Package Management
+;; Package Management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -15,7 +15,6 @@
 ;;; Misc settings
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory)
       blink-cursor-blinks 2)
-(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; Treesitter grammars
 (setq treesit-language-source-alist
@@ -40,6 +39,7 @@
   (global-prettify-symbols-mode t)
   (tab-always-indent 'complete)
   (proced-format 'medium)
+  (blink-cursor-mode nil)
   :init
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
@@ -56,6 +56,9 @@
 	("M-2" . make-frame)
 	("M-3" . delete-frame)
 	("s-3" . delete-frame)
+	("s-8" . split-window-below)
+	("s-9" . split-window-right)
+	("s-0" . delete-window)
 	("M-j" . join-line)
 	("s-r" . replace-regexp)
 	("M-z" . zap-up-to-char)
@@ -72,10 +75,9 @@
 	("C-c t c" . calc)
 	("C-c t p" . proced)
 	("C-<tab>" . hippie-expand)
-	("C-c w u" . winner-undo)
 	("s-<up>" . scroll-other-window-down)
 	("s-<down>" . scroll-other-window)
-	("C-," . completion-at-point)
+;	("C-," . completion-at-point)
 	("C-c <prior>" . beginning-of-buffer)
 	("C-c <next>" . end-of-buffer)
 	("C-x f" . find-file-other-window)
@@ -84,6 +86,14 @@
 	("C-<f1>" . (lambda () (interactive) (bookmark-jump "1")))
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
+
+(use-package winner
+  :ensure nil
+  :commands (winner-undo winner-redo)
+  :bind
+  ("C-c w u" . winner-undo)
+  :config
+  (winner-mode))
 
 (use-package delsel
   :ensure nil
@@ -115,10 +125,17 @@
 (use-package eshell
   :commands (eshell)
   :preface
-  (require 'esh-mode)
   :custom
   (eshell-destroy-buffer-when-process-dies t)
-  :config  
+  :config
+  (defun ebn/setup-eshell ()
+    (interactive)
+    (with-temp-buffer
+      (call-process "bash" nil '(t nil) nil "-ci" "alias")
+      (goto-char (point-min))
+      (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
+        (eshell/alias (match-string 1) (match-string 2))))
+    (require 'esh-mode))
   (defun eshell-load-bash-aliases ()
     "Read Bash aliases and add them to the list of eshell aliases."
     (with-temp-buffer
@@ -126,10 +143,8 @@
       (goto-char (point-min))
       (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
         (eshell/alias (match-string 1) (match-string 2)))))
-  (defalias 'openo 'find-file-other-frame)
-  (defun eshell/ff (file) (find-file file))
   :hook
-  (eshell-mode . eshell-load-bash-aliases)
+  (eshell-mode . ebn/setup-eshell)
   
   :bind
   ("C-c t e" . eshell)
@@ -148,6 +163,13 @@
     (let ((fn (dired-get-filename)))
       (kill-new fn)
       (message "%s saved to kill-ring." fn)))
+
+  (defun ebn/find-file-other-frame ()
+    (interactive)
+    (let ((f (dired-get-filename)))
+     (progn
+       (other-frame 1)
+       (find-file f))))
     
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
@@ -169,7 +191,8 @@
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)
 	("w" . ebn/dired-copy-file-name)
-	("?" . dired-create-empty-file)))
+	("?" . dired-create-empty-file)
+	("o" . ebn/find-file-other-frame)))
 
 (use-package save-hist
   :ensure nil
@@ -193,7 +216,7 @@
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#ae95c7")
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
 
-(use-package mindre-theme
+(use-package mindre-dark-theme
   :ensure nil
   :load-path "themes/"
   :custom
@@ -202,12 +225,10 @@
   :custom-face
   (mindre-heading-1 ((t (:height 1.2))))
   :config
-  (setq pdf-view-midnight-colors '("#141414" . "#e4e4ef"))
   (load-theme 'mindre-dark t))
 
 ;;; Backups
 (use-package no-littering
-  :ensure t
   :preface
   (setq auto-save-file-name-transforms
 	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
@@ -227,12 +248,13 @@
   :custom (completion-styles '(orderless flex)))
 
 (use-package consult
-  :ensure t
-  :custom
-  (recentf-mode t)
-  (consult-preview-key nil)
   :config
+  (setq recentf-exclude '("/tmp/")
+	consult-preview-key nil)
+  (recentf-mode 1)  
+
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
+  :init
   (setq completion-in-region-function
 	(lambda (&rest args)
 	  (apply (if vertico-mode
@@ -277,7 +299,7 @@
 	    (calendar-last-day-of-month month year)))
       (= day last-day-of-month)))
   
-  (plist-put org-format-latex-options :scale 1.7)
+  (plist-put org-format-latex-options :scale 1.5)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((maxima . t)
@@ -286,7 +308,6 @@
      (gnuplot . t)))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
-  ;; Options
   :custom
   (org-confirm-babel-evaluate nil)
   (org-confirm-babel-evaluate nil)
@@ -317,6 +338,7 @@
   (org-agenda-tags-column 80)
   (org-agenda-show-inherited-tags nil)
   (org-agenda-remove-tags t)
+  (org-columns-default-format "%25ITEM %TODO %3PRIORITY %TAGS %LOCATION")
   (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
 		       (sequence "BACKLOG(b)" "ACTIVE(a)"
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
@@ -342,7 +364,8 @@
 	("C-c e" . org-latex-export-to-pdf)
 	("C-c C-<up>" . org-promote-subtree)
 	("C-c C-<down>" . org-demote-subtree)
-	("C-c 1" . org-toggle-narrow-to-subtree))
+	("C-c 1" . org-toggle-narrow-to-subtree)
+	("C-c t t" . org-transclusion-add))
   (:map global-map
 	("C-c n n" . org-capture)
 	("C-c n a" . org-agenda)
@@ -354,8 +377,7 @@
   :load-path "lisp/"
   :after org)
 
-(use-package org-transclusion)
-(use-package org-drill)
+(use-package org-transclusion :defer t)
 
 (use-package org-modern
   :custom
@@ -366,15 +388,9 @@
   :hook (org-mode . org-modern-mode))
 
 (use-package org-roam
+  :disabled
   :defer t
   :commands (org-roam-node-find org-roam-capture)
-  :init
-  (setq org-roam-v2-ack t) ;; Disable v2-migration-prompt
-
-  (setq org-roam-node-display-template
-        (concat "${title:*} "
-                (propertize "${tags:10}" 'face 'org-tag)))
-
   :custom
   (org-roam-directory "~/org/org-roam")
   (org-roam-completion-everywhere t)
@@ -390,29 +406,31 @@
 				 "#+title: ${title}")))
 		  (mapconcat 'identity options "\n")))
       :unnarrowed t)))
-
   (org-roam-node-display-template "${title}")
-  :bind-keymap
-  ("C-c n d" . org-roam-dailies-map)
   :bind (("C-c n l" . org-roam-buffer-toggle)
 	 ("C-c n f" . org-roam-node-find)
 	 ("C-c n g" . org-roam-graph)
 	 ("C-c n c" . org-roam-capture))
   :config
+  (setq org-roam-node-display-template
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode))
 
 ;;; LaTeX and math
-(use-package gnuplot)
-(use-package gnuplot-mode)
+(use-package gnuplot :mode ("\\.gp\\'"))
 (use-package maxima
   :init
-  (add-hook 'maxima-mode-hook #'maxima-hook-function)
-  (add-hook 'maxima-inferior-mode-hook #'maxima-hook-function)
-  (setq maxima-display-maxima-buffer nil)
-  :mode ("\\.mac\\'" . maxima-mode)
+  (message "loading maxima")
+  :config
+  (setq imaxima-fnt-size "Large")
+  :hook
+  (maxima-mode-hook . maxima-hook-function)
+  (maxima-inferior-mode-hook . maxima-hook-function)
   :interpreter ("maxima" . maxima-mode))
 
 (use-package julia-mode
+  :mode ("\\.jl\\'" . julia-mode)
   :init
   (setenv "JULIA_NUM_THREADS" "8")
   :config
@@ -420,7 +438,7 @@
   (defalias 'org-babel-variable-assignments:julia 'org-babel-variable-assignments:julia-vterm))
 
 (use-package julia-snail
-  :ensure t
+  :after julia-mode
   :custom
   (julia-snail-extensions '(ob-julia))
   (julia-snail-repl-display-eval-results nil)
@@ -438,6 +456,37 @@
   :bind
   (:map org-src-mode-map
 	("<tab>" . ebn/org-cdlatex-tab)))
+
+(use-package laas
+  :hook (LaTeX-mode . laas-mode)
+  :config ; do whatever here
+  (aas-set-snippets 'laas-mode
+                    ;; set condition!
+                    :cond #'texmathp ; expand only while in math
+                    "supp" "\\supp"
+                    "On" "O(n)"
+                    "O1" "O(1)"
+                    "Olog" "O(\\log n)"
+                    "Olon" "O(n \\log n)"
+		    "fx" "f(x)"
+		    "gx" "g(x)"
+		    "xt" "x(t)"
+		    "yt" "y(t)"
+		    "zt" "z(t)"
+		    ":::" "\\vdots"
+		    "intab" "\int_{a}^{b}"
+		    "vp" "\\vec{v_{p}}"
+		    "up" "\\vec{u_{p}}"
+		    "vn" "\\vec{v_{n}}"
+		    "un" "\\vec{u_{n}}"
+                    ;; bind to functions!
+                    "Sum" (lambda () (interactive)
+                            (yas-expand-snippet "\\sum_{$1}^{$2} $0"))
+                    "Span" (lambda () (interactive)
+                             (yas-expand-snippet "\\Span($1)$0"))
+                    ;; add accent snippets
+                    :cond #'laas-object-on-left-condition
+                    "qq" (lambda () (interactive) (laas-wrap-previous-object "sqrt"))))
 
 (use-package org-auctex
   :load-path "lisp/"
@@ -464,17 +513,18 @@
 	      ("C-9" . paredit-forward)))
 
 (use-package racket-mode
-  :ensure t
   :config
-  (add-hook 'racket-xp-mode-hook
-            (lambda ()
-              (remove-hook 'pre-redisplay-functions
-                           #'racket-xp-pre-redisplay
-                           t)))
-  (add-hook 'racket-mode-hook      #'racket-unicode-input-method-enable)
-  (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
-  (add-hook 'racket-mode-hook      #'racket-xp-mode)
-  (add-hook 'racket-mode-hook      #'paredit-mode))
+  (defun ebn/setup-racket-mode ()
+    (interactive)
+    (racket-unicode-input-method-enable)
+    (racket-xp-mode)
+    (remove-hook 'pre-redisplay-functions
+		 #'racket-xp-pre-redisplay
+		 t)
+    (paredit-mode))
+  :hook
+  (racket-mode . ebn/setup-racket-mode)
+  (racket-repl-mode . racket-unicode-input-method-enable))
 
 ;;; Haskell
 (use-package haskell-mode
@@ -518,6 +568,7 @@
 		 (notmuch-search-add-tag '("+deleted"))))))
 
 (use-package smtpmail
+  :after notmuch
   :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
 	smtpmail-smtp-server "smtp.mailbox.org"
@@ -526,6 +577,7 @@
 	smtpmail-queue-mail nil))
 
 (use-package sendmail
+  :after notmuch
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
@@ -537,7 +589,7 @@
   (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
 		  ("https://sachachua.com/blog/feed/" emacs))))
 
-(use-package rainbow-mode)
+(use-package rainbow-mode :defer t)
 
 (use-package sv-kalender
   :ensure nil
@@ -545,7 +597,6 @@
   :load-path "lisp/")
 
 (use-package pdf-tools
-  :ensure t
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :init
@@ -562,7 +613,6 @@
 
 ;;; Rest/WIP
 (use-package embark
-  :ensure t
   :bind
   (("C-." . embark-act)
    ("C-h B" . embark-bindings))
@@ -575,7 +625,8 @@
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-(use-package embark-consult)
+(use-package embark-consult :after consult)
+(use-package marginalia :init (marginalia-mode))
 
 (use-package yasnippet
   :defer 5
@@ -586,11 +637,8 @@
   (yas-global-mode)
   (yas-reload-all))
 
-(use-package marginalia
-  :init
-  (marginalia-mode))
-
-(use-package wgrep)
+(use-package wgrep
+  :commands (occur embark-act grep))
 
 (use-package avy
   :commands
@@ -609,3 +657,6 @@
 (use-package ebn-course
   :load-path "lisp/"
   :commands (ebn/select-course))
+
+(use-package org-drill
+  :commands (org-drill))
