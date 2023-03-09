@@ -240,9 +240,7 @@
 	("C-c i" . consult-imenu)
 	("C-x b" . consult-buffer)
 	("C-c x" . consult-complex-command)
-	("C-c b" . consult-bookmark))
-  (:map comint-mode-map
-	("C-c C-l" . consult-history)))
+	("C-c b" . consult-bookmark)))
 
 ;;; Org
 (use-package org
@@ -406,6 +404,10 @@
 
 (use-package tex
   :ensure auctex
+  :config
+  ;; (add-to-list 'TeX-expand-list
+  ;; 	       '("%(mode)"
+  ;; 		 (lambda () (if TeX-interactive-mode "" " -interaction=batchmode"))))
   :hook
   (LaTeX-mode . turn-on-auto-fill))
 
