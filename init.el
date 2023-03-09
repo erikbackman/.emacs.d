@@ -9,6 +9,7 @@
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)              
   (package-install 'use-package))
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq use-package-always-ensure t)
 
@@ -19,12 +20,6 @@
 ;; Treesitter grammars
 (setq treesit-language-source-alist
       '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
-
-(defun ebn/su-find-this-file ()
-  (interactive)
-  (let ((cur-buffer (current-buffer)))
-    (kill-buffer cur-buffer)
-    (find-file (format "/su::%s" (buffer-file-name cur-buffer)))))
 
 (defun ebn/bury-scratch-buffer ()
   (if (string= (buffer-name) "*scratch*")
@@ -77,7 +72,6 @@
 	("C-<tab>" . hippie-expand)
 	("s-<up>" . scroll-other-window-down)
 	("s-<down>" . scroll-other-window)
-;	("C-," . completion-at-point)
 	("C-c <prior>" . beginning-of-buffer)
 	("C-c <next>" . end-of-buffer)
 	("C-x f" . find-file-other-window)
@@ -86,14 +80,6 @@
 	("C-<f1>" . (lambda () (interactive) (bookmark-jump "1")))
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
-
-(use-package winner
-  :ensure nil
-  :commands (winner-undo winner-redo)
-  :bind
-  ("C-c w u" . winner-undo)
-  :config
-  (winner-mode))
 
 (use-package delsel
   :ensure nil
@@ -136,13 +122,6 @@
       (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
         (eshell/alias (match-string 1) (match-string 2))))
     (require 'esh-mode))
-  (defun eshell-load-bash-aliases ()
-    "Read Bash aliases and add them to the list of eshell aliases."
-    (with-temp-buffer
-      (call-process "bash" nil '(t nil) nil "-ci" "alias")
-      (goto-char (point-min))
-      (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
-        (eshell/alias (match-string 1) (match-string 2)))))
   :hook
   (eshell-mode . ebn/setup-eshell)
   
@@ -163,14 +142,7 @@
     (let ((fn (dired-get-filename)))
       (kill-new fn)
       (message "%s saved to kill-ring." fn)))
-
-  (defun ebn/find-file-other-frame ()
-    (interactive)
-    (let ((f (dired-get-filename)))
-     (progn
-       (other-frame 1)
-       (find-file f))))
-    
+      
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
 	dired-dwim-target t
@@ -191,8 +163,7 @@
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)
 	("w" . ebn/dired-copy-file-name)
-	("?" . dired-create-empty-file)
-	("o" . ebn/find-file-other-frame)))
+	("?" . dired-create-empty-file)))
 
 (use-package save-hist
   :ensure nil
@@ -310,26 +281,19 @@
   (add-hook 'org-mode-hook 'org-display-inline-images)
   :custom
   (org-confirm-babel-evaluate nil)
-  (org-confirm-babel-evaluate nil)
   (org-startup-indented t)
   (org-pretty-entities t)
   (org-startup-with-inline-images t)
-  (org-ellipsis "…")
   (org-export-preserve-breaks t)
   (org-highlight-latex-and-related '(native))
   (org-src-fontify-natively t)
   (org-fontify-quote-and-verse-blocks t)
   (org-startup-folded t)
   (org-cycle-separator-lines 2)
-  (org-catch-invisible-edits 'error)
-  (org-ctrl-k-protect-subtree t)
   (org-image-actual-width nil)
   (org-return-follows-link t)
-  (org-hide-emphasis-markers t)
   (org-hide-leading-stars t)
   (org-cycle-separator-lines 2)
-  (org-log-repeat nil)
-  (org-log-done nil)
   (org-latex-src-block-backend 'minted)
   (org-latex-packages-alist '(("" "minted")))
   (org-latex-tables-centered t)
@@ -351,11 +315,7 @@
      ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
       "* TODO %?\n  %i\n  %a")
      ("s" "Someday" entry (file "~/org/someday.org")
-      "* TODO %?\n  %i\n  %a")
-     ("r" "Roam node" function #'org-roam-capture)
-     ("j" "Journal: Today" function #'org-roam-dailies-capture-today)
-     ("J" "Journal: Tomorrow" function #'org-roam-dailies-capture-tomorrow)
-     ("d" "Journal: Date" function #'org-roam-dailies-capture-date)))
+      "* TODO %?\n  %i\n  %a")))
   :bind*
   (:map org-mode-map
 	("C-<return>" . org-meta-return)
@@ -488,14 +448,6 @@
                     :cond #'laas-object-on-left-condition
                     "qq" (lambda () (interactive) (laas-wrap-previous-object "sqrt"))))
 
-(use-package org-auctex
-  :load-path "lisp/"
-  :disabled
-  :custom
-  (preview-scale-function 1.7)
-  :config
-  :hook (org-mode . org-auctex-mode))
-
 ;;; Lisp
 (use-package paredit
   :init
@@ -591,11 +543,6 @@
 
 (use-package rainbow-mode :defer t)
 
-(use-package sv-kalender
-  :ensure nil
-  :commands 'org-agenda
-  :load-path "lisp/")
-
 (use-package pdf-tools
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -612,20 +559,6 @@
   (pdf-tools-install))
 
 ;;; Rest/WIP
-(use-package embark
-  :bind
-  (("C-." . embark-act)
-   ("C-h B" . embark-bindings))
-  :init
-  (setq prefix-help-command #'embark-prefix-help-command)
-  :config
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
-
-(use-package embark-consult :after consult)
 (use-package marginalia :init (marginalia-mode))
 
 (use-package yasnippet
@@ -651,8 +584,6 @@
   ("C-c m" . avy-move-line)
   (:map isearch-mode-map
 	("C-ö" . avy-isearch)))
-
-(use-package graphviz-dot-mode)
 
 (use-package ebn-course
   :load-path "lisp/"
