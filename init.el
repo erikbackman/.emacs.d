@@ -219,10 +219,12 @@
   :custom (completion-styles '(orderless flex)))
 
 (use-package consult
+  :defer nil
   :config
   (setq recentf-exclude '("/tmp/")
+	recentf-auto-cleanup 'never
 	consult-preview-key nil)
-  (recentf-mode 1)  
+  (recentf-mode 1)
 
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :init
