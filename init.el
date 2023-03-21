@@ -309,12 +309,27 @@
    'org-babel-load-languages
    '((maxima . t)
      (julia . t)
+     (dot . t)
      (haskell . t)
      (gnuplot . t)))
+
+  (setq org-latex-listings 'minted
+	org-latex-packages-alist '(("" "minted"))
+	org-latex-pdf-process
+	'("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+  (setq org-latex-minted-langs
+	'((emacs-lisp "common-lisp")
+	  (shell-script "bash")
+	  (julia "julia")))
+  
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
   :custom
+  (org-use-speed-commands t)
   (org-confirm-babel-evaluate nil)
+  (org-log-into-drawer t)
   (org-startup-indented t)
   (org-pretty-entities t)
   (org-startup-with-inline-images t)
