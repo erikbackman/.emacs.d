@@ -87,6 +87,31 @@
   :init
   (delete-selection-mode 1))
 
+(use-package window
+  :ensure nil
+  :config
+  (setq display-buffer-alist
+	`(((derived-mode . process-menu-mode)
+	   (display-buffer-in-side-window)
+           (dedicated . t)
+           (side . bottom)
+           (slot . 0))
+	  ((derived-mode . messages-buffer-mode)
+           (display-buffer-in-side-window)
+           (window-height . 0.16)
+           (side . bottom)
+           (slot . 1))
+	  ((derived-mode . proced-mode)
+	   (display-buffer-full-frame)))))
+
+(use-package winner
+  :ensure nil
+  :defer 2
+  :config
+  (winner-mode)
+  :bind
+  ("C-0" . winner-undo))
+
 (use-package repeat
   :ensure nil
   :defer 2
