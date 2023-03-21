@@ -453,10 +453,6 @@
 
 (use-package tex
   :ensure auctex
-  :config
-  ;; (add-to-list 'TeX-expand-list
-  ;; 	       '("%(mode)"
-  ;; 		 (lambda () (if TeX-interactive-mode "" " -interaction=batchmode"))))
   :hook
   (LaTeX-mode . turn-on-auto-fill))
 
