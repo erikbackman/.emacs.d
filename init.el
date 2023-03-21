@@ -388,6 +388,7 @@
 (use-package org-transclusion :defer t)
 
 (use-package org-modern
+  :disabled
   :custom
   (org-modern-block nil)
   (org-modern-table nil)
