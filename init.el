@@ -597,7 +597,9 @@
   (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
 	TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
 	TeX-source-correlate-start-server t)
-
+  :custom
+  (pdf-view-midnight-invert nil)
+  (pdf-view-midnight-colors '("#e4e4ef" . "#101010"))
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
   :hook
