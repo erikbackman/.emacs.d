@@ -466,42 +466,42 @@
 
 (use-package laas
   :hook (LaTeX-mode . laas-mode)
-  :config ; do whatever here
-  (aas-set-snippets 'laas-mode
-                    ;; set condition!
-                    :cond #'texmathp ; expand only while in math
-                    "supp" "\\supp"
-                    "On" "O(n)"
-                    "O1" "O(1)"
-                    "Olog" "O(\\log n)"
-                    "Olon" "O(n \\log n)"
-		    "fx" "f(x)"
-		    "gx" "g(x)"
-		    "xt" "x(t)"
-		    "yt" "y(t)"
-		    "zt" "z(t)"
-		    ":::" "\\vdots"
-		    "intab" "\int_{a}^{b}"
-		    "vp" "\\vec{v_{p}}"
-		    "up" "\\vec{u_{p}}"
-		    "vn" "\\vec{v_{n}}"
-		    "un" "\\vec{u_{n}}"
-                    ;; bind to functions!
-                    "Sum" (lambda () (interactive)
-                            (yas-expand-snippet "\\sum_{$1}^{$2} $0"))
-                    "Span" (lambda () (interactive)
-                             (yas-expand-snippet "\\Span($1)$0"))
-                    ;; add accent snippets
-                    :cond #'laas-object-on-left-condition
-                    "qq" (lambda () (interactive) (laas-wrap-previous-object "sqrt"))))
+  :config
+  (aas-set-snippets
+   'laas-mode
+   :cond #'texmathp
+   "supp" "\\supp"
+   "On" "O(n)"
+   "O1" "O(1)"
+   "Olog" "O(\\log n)"
+   "Olon" "O(n \\log n)"
+   "fx" "f(x)"
+   "gx" "g(x)"
+   "xt" "x(t)"
+   "yt" "y(t)"
+   "zt" "z(t)"
+   ":::" "\\vdots"
+   "intab" "\int_{a}^{b}"
+   "vp" "\\vec{v_{p}}"
+   "up" "\\vec{u_{p}}"
+   "vn" "\\vec{v_{n}}"
+   "un" "\\vec{u_{n}}"
+
+   "Sum" (lambda () (interactive)
+           (yas-expand-snippet "\\sum_{$1}^{$2} $0"))
+   "Span" (lambda () (interactive)
+            (yas-expand-snippet "\\Span($1)$0"))
+   ;; add accent snippets
+   :cond #'laas-object-on-left-condition
+   "qq" (lambda () (interactive) (laas-wrap-previous-object "sqrt"))))
 
 ;;; Lisp
 (use-package paredit
-  :init
-  (add-hook 'lisp-mode-hook #'paredit-mode)
-  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
   :config
   (define-key paredit-mode-map [remap paredit-newline] nil)
+  :hook
+  (lisp-mode . paredit-mode)
+  (emacs-lisp-mode . paredit-mode)
   :bind (:map paredit-mode-map
 	      ("C-<left>" . paredit-backward-slurp-sexp)
 	      ("M-<left>" . paredit-backward-barf-sexp)
