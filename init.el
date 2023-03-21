@@ -143,18 +143,17 @@
 
 (use-package eshell
   :commands (eshell)
-  :preface
   :custom
   (eshell-destroy-buffer-when-process-dies t)
   :config
+  (require 'esh-mode)
   (defun ebn/setup-eshell ()
     (interactive)
     (with-temp-buffer
       (call-process "bash" nil '(t nil) nil "-ci" "alias")
       (goto-char (point-min))
       (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
-        (eshell/alias (match-string 1) (match-string 2))))
-    (require 'esh-mode))
+        (eshell/alias (match-string 1) (match-string 2)))))
   :hook
   (eshell-mode . ebn/setup-eshell)
   
@@ -180,6 +179,7 @@
 	dired-recursive-deletes t
 	dired-dwim-target t
 	dired-omit-files "^\\..*$\\|^_.*$"
+	dired-isearch-filenames 'dwim
 	delete-by-moving-to-trash t)
 
   (setq dired-guess-shell-alist-user
@@ -204,7 +204,7 @@
   :init
   (savehist-mode 1)
   :config
-  (setq history-length 10))
+  (setq history-length 20))
  
 (use-package erc
   :commands erc-tls
@@ -218,7 +218,8 @@
 	erc-prompt-for-password nil)
   (setq auth-sources '("~/.authinfo.gpg"))
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#ae95c7")
-  (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
+  (setq erc-prompt (lambda () (concat "[" (buffer-name) "]")))
+  :hook (erc-mode . ebn/set-small-font))
 
 (use-package mindre-dark-theme
   :ensure nil
@@ -248,13 +249,12 @@
   (vertico-mode))
 
 (use-package orderless
-  :commands (orderless)
-  :custom (completion-styles '(orderless flex)))
+  :custom (completion-styles '(orderless)))
 
 (use-package consult
   :defer nil
   :config
-  (setq recentf-exclude '("/tmp/")
+  (setq recentf-exclude '("/tmp/" "/su" "/etc/")
 	recentf-auto-cleanup 'never
 	consult-preview-key nil)
   (recentf-mode 1)
@@ -275,6 +275,7 @@
 	("C-c i" . consult-imenu)
 	("C-x b" . consult-buffer)
 	("C-c x" . consult-complex-command)
+	("C-c j" . consult-global-mark)
 	("C-c b" . consult-bookmark)))
 
 ;;; Org
@@ -354,7 +355,6 @@
 	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
 	("C-<tab>" . hippie-expand)
-	("C-c e" . org-latex-export-to-pdf)
 	("C-c C-<up>" . org-promote-subtree)
 	("C-c C-<down>" . org-demote-subtree)
 	("C-c 1" . org-toggle-narrow-to-subtree)
@@ -413,8 +413,6 @@
 ;;; LaTeX and math
 (use-package gnuplot :mode ("\\.gp\\'"))
 (use-package maxima
-  :init
-  (message "loading maxima")
   :config
   (setq imaxima-fnt-size "Large")
   :hook
