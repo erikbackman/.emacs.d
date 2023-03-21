@@ -40,6 +40,14 @@
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
   (global-unset-key (kbd "C-z"))     ; and this...
   (global-unset-key (kbd "C-x C-z")) ; and this....
+
+  (unless (version< emacs-version "29.0")
+    (setq completion-auto-help 'visible
+          completion-auto-select 'second-tab
+          completion-show-help nil
+          completions-sort nil
+          completions-header-format nil))
+  
   :bind
   (:map global-map
 	("C-8" . backward-list)
