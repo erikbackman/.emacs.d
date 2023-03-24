@@ -10,7 +10,7 @@
 
 ;;;###autoload
 (define-minor-mode ebn/pulse-minor-mode
-  "Pulse highlight light on window changes."
+  "Pulse highlight on window changes."
   :global t
   :lighter nil
   :init-value nil
