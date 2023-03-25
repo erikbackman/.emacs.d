@@ -563,6 +563,7 @@
   :init
   (setq epg-pinentry-mode 'loopback)
   :custom
+  (notmuch-show-logo nil)
   (notmuch-saved-searches
    '((:name "inbox" :query "tag:inbox" :key "i")
      (:name "unread" :query "tag:unread" :key "u")
