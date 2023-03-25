@@ -51,6 +51,7 @@
   (fringe-mode '(1 . 1))
   (inhibit-startup-screen t)
   (initial-scratch-message nil)
+  (calc-display-trail nil)
   :init
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
