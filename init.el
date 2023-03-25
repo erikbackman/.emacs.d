@@ -28,6 +28,9 @@
     t))
 (add-hook 'kill-buffer-query-functions 'ebn/bury-scratch-buffer)
 
+(defvar ebn/toggle--buffers-alist
+  '(("*Messages*" . view-echo-area-messages)))
+
 (defun ebn/toggle-buffer-window (buffer-name)
   (if-let ((win (get-buffer-window buffer-name)))
       (delete-window win)
