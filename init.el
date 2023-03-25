@@ -45,6 +45,9 @@
   (tab-always-indent 'complete)
   (proced-format 'medium)
   (blink-cursor-mode nil)
+  (fringe-mode '(1 . 1))
+  (inhibit-startup-screen t)
+  (initial-scratch-message nil)
   :init
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
@@ -56,6 +59,7 @@
           completion-auto-select 'second-tab
           completion-show-help nil
           completions-sort nil
+	  completions-max-height 20
           completions-header-format nil))
   
   :bind
@@ -80,12 +84,14 @@
 	("C-c t l" . display-line-numbers-mode)
 	("C-c t s" . flyspell-mode)
 	("C-h ," . xref-find-definitions)
+	("C-h e" . ebn/toggle-messages)
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
 	("C-x ;" . comment-line)
 	("s-ö" . mode-line-other-buffer)
 	("C-c t c" . calc)
+	("C-c C-t C-c" . calc)
 	("C-c t p" . proced)
 	("C-<tab>" . hippie-expand)
 	("s-<up>" . scroll-other-window-down)
@@ -134,7 +140,7 @@
   :ensure nil
   :defer 2
   :config
-  (repeat-mode t)
+  (repeat-mode 1)
   :custom
   (repeat-echo-function #'ignore)
   (repeat-exit-timeout nil)
