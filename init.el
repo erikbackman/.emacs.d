@@ -21,11 +21,21 @@
 (setq treesit-language-source-alist
       '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
 
+;;; Functions
 (defun ebn/bury-scratch-buffer ()
   (if (string= (buffer-name) "*scratch*")
       (ignore (bury-buffer))
     t))
 (add-hook 'kill-buffer-query-functions 'ebn/bury-scratch-buffer)
+
+(defun ebn/toggle-buffer-window (buffer-name)
+  (if-let ((win (get-buffer-window buffer-name)))
+      (delete-window win)
+    (funcall (assoc-default buffer-name ebn/toggle--buffers-alist))))
+
+(defun ebn/toggle-messages ()
+  (interactive)
+  (ebn/toggle-buffer-window "*Messages*"))
 
 ;;; Built-in Packages
 (use-package emacs
