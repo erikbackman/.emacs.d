@@ -22,6 +22,11 @@
       '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
 
 ;;; Functions
+(defmacro ebn/setup (name &rest body)
+  "Wrapper around use-package for built-in and local packages."
+  (declare (indent 1))
+  `(use-package ,name :ensure nil ,@body))
+
 (defun ebn/bury-scratch-buffer ()
   (if (string= (buffer-name) "*scratch*")
       (ignore (bury-buffer))
@@ -41,7 +46,7 @@
   (ebn/toggle-buffer-window "*Messages*"))
 
 ;;; Built-in Packages
-(use-package emacs
+(ebn/setup emacs
   :custom
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
@@ -51,7 +56,7 @@
   (fringe-mode '(1 . 1))
   (inhibit-startup-screen t)
   (initial-scratch-message nil)
-  (calc-display-trail nil)
+  (calc-display-trail t)
   :init
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
@@ -109,13 +114,13 @@
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
 
-(use-package delsel
+(ebn/setup delsel
   :ensure nil
   :commands (set-mark-command mark-sexp)
   :init
   (delete-selection-mode 1))
 
-(use-package window
+(ebn/setup window
   :ensure nil
   :config
   (setq display-buffer-alist
@@ -132,7 +137,7 @@
 	  ((derived-mode . proced-mode)
 	   (display-buffer-full-frame)))))
 
-(use-package winner
+(ebn/setup winner
   :ensure nil
   :defer 2
   :config
@@ -140,7 +145,7 @@
   :bind
   ("C-0" . winner-undo))
 
-(use-package repeat
+(ebn/setup repeat
   :ensure nil
   :defer 2
   :config
@@ -159,9 +164,12 @@
 	       ("f" . forward-sexp)
 	       ("b" . backward-sexp))
   (:repeat-map my/backward-up-list-repeat-map
-	       ([up] . backward-up-list)))
+	       ([up] . backward-up-list))
+  (:repeat-map my/backward-up-repeat-map
+	       ("u" . paredit-backward-up)
+	       ("d" . paredit-forward-down)))
 
-(use-package eshell
+(ebn/setup eshell
   :commands (eshell)
   :custom
   (eshell-destroy-buffer-when-process-dies t)
@@ -184,8 +192,7 @@
 		   (eshell/clear-scrollback)
 		   (eshell-emit-prompt)))))
 
-(use-package dired
-  :ensure nil
+(ebn/setup dired
   :config
   (require 'dired-x)
   
@@ -203,7 +210,7 @@
 	delete-by-moving-to-trash t)
 
   (setq dired-guess-shell-alist-user
-	'(("\\.mp4\\'" "mpv")
+	'(("\\.mp4\\'" "mpv &>/dev/null")
 	  ("\\.pdf\\'" "mupdf")))
   
   (add-hook 'dired-mode-hook #'dired-omit-mode)
@@ -218,15 +225,14 @@
 	("w" . ebn/dired-copy-file-name)
 	("?" . dired-create-empty-file)))
 
-(use-package save-hist
-  :ensure nil
+(ebn/setup save-hist
   :defer 10
   :init
   (savehist-mode 1)
   :config
   (setq history-length 20))
  
-(use-package erc
+(ebn/setup erc
   :commands erc-tls
   :config
   (setq erc-server "irc.libera.chat"
@@ -241,14 +247,18 @@
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]")))
   :hook (erc-mode . ebn/set-small-font))
 
-(use-package mindre-dark-theme
-  :ensure nil
+(ebn/setup dictionary
+  :custom
+  (dictionary-server "dict.org"))
+
+(ebn/setup ebn-pulse
+  :commands (ebn/pulse-minor-mode))
+
+(ebn/setup mindre-dark-theme
   :load-path "themes/"
   :custom
   (mindre-use-more-fading nil)
   (mindre-use-faded-lisp-parens t)
-  :custom-face
-  (mindre-heading-1 ((t (:height 1.2))))
   :config
   (load-theme 'mindre-dark t))
 
@@ -290,7 +300,7 @@
   :bind
   (:map global-map
 	("C-c r" . consult-recent-file)
-	("C-c f" . consult-ripgrep)
+	("C-c f" . consult-git-grep)
 	("C-c l" . consult-line)
 	("C-c i" . consult-imenu)
 	("C-x b" . consult-buffer)
