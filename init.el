@@ -115,13 +115,11 @@
 	("C-x K" . kill-buffer-and-window)))
 
 (ebn/setup delsel
-  :ensure nil
   :commands (set-mark-command mark-sexp)
   :init
   (delete-selection-mode 1))
 
 (ebn/setup window
-  :ensure nil
   :config
   (setq display-buffer-alist
 	`(((derived-mode . process-menu-mode)
@@ -138,7 +136,6 @@
 	   (display-buffer-full-frame)))))
 
 (ebn/setup winner
-  :ensure nil
   :defer 2
   :config
   (winner-mode)
@@ -146,7 +143,6 @@
   ("C-0" . winner-undo))
 
 (ebn/setup repeat
-  :ensure nil
   :defer 2
   :config
   (repeat-mode 1)
