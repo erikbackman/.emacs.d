@@ -7,8 +7,9 @@
 
 (custom-theme-set-faces
  'mindre-nineties
+ '(cperl-nonoverridable-face ((t (:inherit font-lock-keyword-face))))
  '(erc-timestamp-face ((t (:foreground "black" :bold t))))
- '(erc-prompt-face ((t (:foreground "medium blue"))))
+ '(erc-prompt-face ((t (:foreground "black"))))
  '(message-header-name ((t (:foreground "black" :bold t))))
  '(notmuch-message-summary-face ((t (:background "gray90"))))
  '(eshell-prompt ((t (:foreground "black"))))
