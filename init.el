@@ -1,3 +1,6 @@
+(load-file "~/.emacs.d/themes/mindre-nineties-theme.el")
+(load-theme 'mindre-nineties t)
+
 ;; Package Management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -12,6 +15,7 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq use-package-always-ensure t)
+(setq use-package-always-defer t)
 
 ;;; Misc settings
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory)
@@ -22,11 +26,6 @@
       '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
 
 ;;; Functions
-(defmacro ebn/setup (name &rest body)
-  "Wrapper around use-package for built-in and local packages."
-  (declare (indent 1))
-  `(use-package ,name :ensure nil ,@body))
-
 (defun ebn/bury-scratch-buffer ()
   (if (string= (buffer-name) "*scratch*")
       (ignore (bury-buffer))
@@ -46,7 +45,7 @@
   (ebn/toggle-buffer-window "*Messages*"))
 
 ;;; Built-in Packages
-(ebn/setup emacs
+(use-package emacs
   :custom
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
@@ -82,9 +81,6 @@
 	("M-2" . make-frame)
 	("M-3" . delete-frame)
 	("s-3" . delete-frame)
-	("s-8" . split-window-below)
-	("s-9" . split-window-right)
-	("s-0" . delete-window)
 	("M-j" . join-line)
 	("s-r" . replace-regexp)
 	("M-z" . zap-up-to-char)
@@ -114,12 +110,12 @@
 	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
 	("C-x K" . kill-buffer-and-window)))
 
-(ebn/setup delsel
+(use-package delsel
   :commands (set-mark-command mark-sexp)
   :init
   (delete-selection-mode 1))
 
-(ebn/setup window
+(use-package window
   :config
   (setq display-buffer-alist
 	`(((derived-mode . process-menu-mode)
@@ -135,14 +131,14 @@
 	  ((derived-mode . proced-mode)
 	   (display-buffer-full-frame)))))
 
-(ebn/setup winner
+(use-package winner
   :defer 2
   :config
   (winner-mode)
   :bind
   ("C-0" . winner-undo))
 
-(ebn/setup repeat
+(use-package repeat
   :defer 2
   :config
   (repeat-mode 1)
@@ -165,12 +161,15 @@
 	       ("u" . paredit-backward-up)
 	       ("d" . paredit-forward-down)))
 
-(ebn/setup eshell
+(use-package eshell
   :commands (eshell)
   :custom
   (eshell-destroy-buffer-when-process-dies t)
   :config
   (require 'esh-mode)
+
+  (defalias 'open 'find-file)
+
   (defun ebn/setup-eshell ()
     (interactive)
     (with-temp-buffer
@@ -178,17 +177,19 @@
       (goto-char (point-min))
       (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
         (eshell/alias (match-string 1) (match-string 2)))))
+
+  (defun ebn/eshell-clear ()
+    (interactive)
+    (eshell/clear-scrollback)
+    (eshell-emit-prompt))
   :hook
   (eshell-mode . ebn/setup-eshell)
-  
   :bind
   ("C-c t e" . eshell)
   (:map eshell-mode-map
-	("C-l" . (lambda () (interactive)
-		   (eshell/clear-scrollback)
-		   (eshell-emit-prompt)))))
+	("C-l" . ebn/eshell-clear)))
 
-(ebn/setup dired
+(use-package dired
   :config
   (require 'dired-x)
   
@@ -221,14 +222,14 @@
 	("w" . ebn/dired-copy-file-name)
 	("?" . dired-create-empty-file)))
 
-(ebn/setup save-hist
+(use-package save-hist
   :defer 10
   :init
   (savehist-mode 1)
   :config
   (setq history-length 20))
  
-(ebn/setup erc
+(use-package erc
   :commands erc-tls
   :config
   (setq erc-server "irc.libera.chat"
@@ -240,23 +241,14 @@
 	erc-prompt-for-password nil)
   (setq auth-sources '("~/.authinfo.gpg"))
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#ae95c7")
-  (setq erc-prompt (lambda () (concat "[" (buffer-name) "]")))
-  :hook (erc-mode . ebn/set-small-font))
+  (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
 
-(ebn/setup dictionary
+(use-package dictionary
   :custom
   (dictionary-server "dict.org"))
 
-(ebn/setup ebn-pulse
+(use-package ebn-pulse
   :commands (ebn/pulse-minor-mode))
-
-(ebn/setup mindre-dark-theme
-  :load-path "themes/"
-  :custom
-  (mindre-use-more-fading nil)
-  (mindre-use-faded-lisp-parens t)
-  :config
-  (load-theme 'mindre-dark t))
 
 ;;; Backups
 (use-package no-littering
@@ -271,19 +263,34 @@
 
 ;;; Completion
 (use-package vertico
+  :demand
   :config
   (vertico-mode))
 
 (use-package orderless
+  :after vertico
   :custom (completion-styles '(orderless)))
 
 (use-package consult
-  :defer nil
+  :demand
   :config
   (setq recentf-exclude '("/tmp/" "/su" "/etc/")
 	recentf-auto-cleanup 'never
 	consult-preview-key nil)
   (recentf-mode 1)
+  
+  (defvar consult--source-erc
+    `( :name "ERC"
+       :narrow ?i
+       :category buffer
+       :history nil
+       :default t
+       :action ,#'consult--buffer-action
+       :items
+       ,(lambda () (consult--buffer-query
+	       :sort 'visibility :as #'buffer-name
+	       :predicate
+	       (lambda (buf) (string-prefix-p "#" (buffer-name buf)))))) )
 
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :init
@@ -306,14 +313,13 @@
 
 ;;; Org
 (use-package org
-  :pin gnu
-  :defer t
   :commands (org-agenda
 	     org-capture
 	     org-cdlatex-mode)
   :config
   (require 'org-mouse)
 
+  (set-face-attribute 'fixed-pitch nil :font "JetBrains Mono")
   (defun ebn/org-cdlatex-tab ()
     (interactive)
     (if (eobp) (progn
@@ -393,8 +399,8 @@
       "* TODO %?\n  %i\n  %a")))
   :bind*
   (:map org-mode-map
-	("C-<return>" . org-meta-return)
 	("C-c h" . consult-org-heading)
+	("C-<return>" . org-meta-return)
 	("C-<tab>" . hippie-expand)
 	("C-c C-<up>" . org-promote-subtree)
 	("C-c C-<down>" . org-demote-subtree)
@@ -411,20 +417,9 @@
   :load-path "lisp/"
   :after org)
 
-(use-package org-transclusion :defer t)
-
-(use-package org-modern
-  :disabled
-  :custom
-  (org-modern-block nil)
-  (org-modern-table nil)
-  :config
-  (global-org-modern-mode)
-  :hook (org-mode . org-modern-mode))
-
 (use-package org-roam
-  :disabled
   :defer t
+  :disabled
   :commands (org-roam-node-find org-roam-capture)
   :custom
   (org-roam-directory "~/org/org-roam")
@@ -556,14 +551,15 @@
   :config
   (defun ebn/haskell-mode-setup ()
     (interactive-haskell-mode)
-    (haskell-indent-mode))
+    (haskell-indent-mode 1))
   (defun haskell-mode-after-save-handler ()
       (ignore-errors (haskell-process-reload)))
   :bind
   ("C-h t" . haskell-mode-show-type-at)
   (:map haskell-mode-map
 	("RET" . electric-newline-and-maybe-indent)
-	("C-M-e" . forward-sentence))
+	("C-M-e" . forward-sentence)
+	("C-x `" . haskell-goto-next-error))
   :hook
   (haskell-mode . ebn/haskell-mode-setup))
 
@@ -656,7 +652,7 @@
   (avy-all-windows 't)
   :bind
   ("C-ö" . avy-goto-char-timer)
-  ("M-g" . avy-goto-line)
+  ("M-G" . goto-line)
   ("C-c m" . avy-move-line)
   (:map isearch-mode-map
 	("C-ö" . avy-isearch)))
