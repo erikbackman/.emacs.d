@@ -1,5 +1,6 @@
-(load-file "~/.emacs.d/themes/mindre-nineties-theme.el")
-(load-theme 'mindre-nineties t)
+;;;; Theme
+(load-file "~/.emacs.d/themes/mindre-monochrome-theme.el")
+(load-theme 'mindre-monochrome t)
 
 ;; Package Management
 (require 'package)
@@ -12,18 +13,21 @@
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)              
   (package-install 'use-package))
-(defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq use-package-always-ensure t)
 (setq use-package-always-defer t)
 
 ;;; Misc settings
+(defalias 'yes-or-no-p 'y-or-n-p)
+(setq confirm-kill-emacs 'y-or-n-p)
+
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory)
       blink-cursor-blinks 2)
 
 ;; Treesitter grammars
 (setq treesit-language-source-alist
-      '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))))
+      '((haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
+	(c . ("https://github.com/tree-sitter/tree-sitter-c"))))
 
 ;;; Functions
 (defun ebn/bury-scratch-buffer ()
@@ -44,13 +48,19 @@
   (interactive)
   (ebn/toggle-buffer-window "*Messages*"))
 
+(defun ebn/find-file-at-point ()
+  (interactive)
+  (if-let ((file (ffap-file-at-point)))
+      (find-file file)))
+
 ;;; Built-in Packages
 (use-package emacs
   :custom
   (show-paren-mode 1)
   (global-prettify-symbols-mode t)
   (tab-always-indent 'complete)
-  (proced-format 'medium)
+  (proced-format-alist '((ebn pid pcpu pmem comm) (ebn-verbose pid pcpu pmem (args comm))))
+  (proced-format 'ebn)
   (blink-cursor-mode nil)
   (fringe-mode '(1 . 1))
   (inhibit-startup-screen t)
@@ -62,30 +72,33 @@
   (global-unset-key (kbd "C-z"))     ; and this...
   (global-unset-key (kbd "C-x C-z")) ; and this....
 
-  (unless (version< emacs-version "29.0")
-    (setq completion-auto-help 'visible
-          completion-auto-select 'second-tab
-          completion-show-help nil
-          completions-sort nil
-	  completions-max-height 20
-          completions-header-format nil))
+  ;; (unless (version< emacs-version "29.0")
+  ;;   (setq completion-auto-help 'visible
+  ;;         completion-auto-select 'second-tab
+  ;;         completion-show-help nil
+  ;;         completions-sort nil
+  ;; 	  completions-max-height 20
+  ;;         completions-header-format nil))
   
   :bind
   (:map global-map
 	("C-8" . backward-list)
 	("C-9" . forward-list)
+	("s-l" . windmove-right)
+	("s-j" . windmove-down)
+	("s-h" . windmove-left)
+	("s-k" . windmove-up)
+	("s-4" . other-window-prefix)
 	("C-f" . forward-word)
 	("C-b" . backward-word)
 	("M-f" . forward-word)
 	("M-1" . delete-other-frames)
-	("M-2" . make-frame)
-	("M-3" . delete-frame)
-	("s-3" . delete-frame)
 	("M-j" . join-line)
 	("s-r" . replace-regexp)
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
 	("M-u" . upcase-dwim)
+	("M-g f" . ebn/find-file-at-point)
 	("C-c t l" . display-line-numbers-mode)
 	("C-c t s" . flyspell-mode)
 	("C-h ," . xref-find-definitions)
@@ -116,6 +129,7 @@
   (delete-selection-mode 1))
 
 (use-package window
+  :ensure nil
   :config
   (setq display-buffer-alist
 	`(((derived-mode . process-menu-mode)
@@ -190,6 +204,7 @@
 	("C-l" . ebn/eshell-clear)))
 
 (use-package dired
+  :ensure nil
   :config
   (require 'dired-x)
   
@@ -220,9 +235,11 @@
 	("q" . (lambda () (interactive) (quit-window t)))
 	("e" . wdired-change-to-wdired-mode)
 	("w" . ebn/dired-copy-file-name)
+	("C-c t i" . image-dired)
 	("?" . dired-create-empty-file)))
 
 (use-package save-hist
+  :ensure nil
   :defer 10
   :init
   (savehist-mode 1)
@@ -248,6 +265,7 @@
   (dictionary-server "dict.org"))
 
 (use-package ebn-pulse
+  :ensure nil
   :commands (ebn/pulse-minor-mode))
 
 ;;; Backups
@@ -292,6 +310,7 @@
 	       :predicate
 	       (lambda (buf) (string-prefix-p "#" (buffer-name buf)))))) )
 
+  (add-to-list 'consult-buffer-sources 'consult--source-erc)
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :init
   (setq completion-in-region-function
@@ -306,9 +325,15 @@
 	("C-c f" . consult-git-grep)
 	("C-c l" . consult-line)
 	("C-c i" . consult-imenu)
+	("M-g i" . consult-imenu)
+	("C-c o" . consult-outline)
+	("M-g o" . consult-outline)
 	("C-x b" . consult-buffer)
+	("C-x B" . consult-buffer-other-window)
 	("C-c x" . consult-complex-command)
 	("C-c j" . consult-global-mark)
+	("C-c h" . consult-history)
+	("M-g g" . consult-goto-line)
 	("C-c b" . consult-bookmark)))
 
 ;;; Org
@@ -546,6 +571,18 @@
   (racket-mode . ebn/setup-racket-mode)
   (racket-repl-mode . racket-unicode-input-method-enable))
 
+;;; Common Lisp
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(use-package sly
+  :config
+  ;; Common Lisp
+  ;; Replace "sbcl" with the path to your implementation
+  ;; (setq sly-lisp-implementations
+  ;; 	'((sbcl ("/usr/bin/sbcl") :coding-system utf-8-unix)))
+  :bind (:map sly-mode-map
+	      ("C-c s" . sly-mrepl-sync)))
+
 ;;; Haskell
 (use-package haskell-mode
   :config
@@ -553,7 +590,9 @@
     (interactive-haskell-mode)
     (haskell-indent-mode 1))
   (defun haskell-mode-after-save-handler ()
-      (ignore-errors (haskell-process-reload)))
+    (ignore-errors (haskell-process-reload)))
+  :custom
+  (haskell-font-lock-symbols t)
   :bind
   ("C-h t" . haskell-mode-show-type-at)
   (:map haskell-mode-map
@@ -663,3 +702,29 @@
 
 (use-package org-drill
   :commands (org-drill))
+
+(use-package corfu
+  :custom
+  (corfu-auto-delay 0.2)
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-commit-predicate nil)
+  (corfu-quit-at-boundary t)
+  (corfu-quit-no-match t)
+  (corfu-echo-documentation nil)
+  :init
+  (global-corfu-mode))
+
+;; Carp
+(use-package clojure-mode)
+(use-package carp-mode
+  :load-path "lisp/carp-emacs"
+  :init
+  (require 'carp-mode)
+  (require 'inf-carp-mode)
+  :config
+  (let ((carp-dir (expand-file-name "~/carp")))
+    (setenv "CARP_DIR" carp-dir)
+    (add-to-list 'exec-path (concat carp-dir "/bin")))
+  (add-to-list 'auto-mode-alist '("\\.carp\\'" . carp-mode))
+  :hook (carp-mode . paredit-mode))
