@@ -223,7 +223,8 @@
    '(rainbow-delimiters-depth-7-face ((t (:foreground "gray20"))))
    '(rainbow-delimiters-depth-8-face ((t (:foreground "gray10"))))
    `(erc-prompt-face ((t (:foreground ,variable :background nil))))
-   `(erc-notice-face ((t (:foreground ,string)))))
+   `(erc-notice-face ((t (:foreground ,string))))
+   `(sly-mrepl-output-face ((t (:foreground "dark sea green")))))
   )
 
 ;;;###autoload
