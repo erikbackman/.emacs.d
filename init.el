@@ -132,12 +132,7 @@
   :ensure nil
   :config
   (setq display-buffer-alist
-	`(((derived-mode . process-menu-mode)
-	   (display-buffer-in-side-window)
-           (dedicated . t)
-           (side . bottom)
-           (slot . 0))
-	  ((derived-mode . messages-buffer-mode)
+	`(((derived-mode . messages-buffer-mode)
            (display-buffer-in-side-window)
            (window-height . 0.16)
            (side . bottom)
@@ -300,9 +295,9 @@
   (defvar consult--source-erc
     `( :name "ERC"
        :narrow ?i
-       :category buffer
+       :category erc
        :history nil
-       :default t
+       :default nil
        :action ,#'consult--buffer-action
        :items
        ,(lambda () (consult--buffer-query
@@ -310,7 +305,8 @@
 	       :predicate
 	       (lambda (buf) (string-prefix-p "#" (buffer-name buf)))))) )
 
-  (add-to-list 'consult-buffer-sources 'consult--source-erc)
+   ;; (push consult--source-erc consult-buffer-sources)
+   ;; (setq consult-buffer-sources (remove 'consult--source-erc consult-buffer-sources))
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :init
   (setq completion-in-region-function
@@ -569,19 +565,22 @@
     (paredit-mode))
   :hook
   (racket-mode . ebn/setup-racket-mode)
-  (racket-repl-mode . racket-unicode-input-method-enable))
+  (racket-repl-mode . racket-unicode-input-method-enable)
+  :custom-face
+  (racket-xp-unused-face ((t (:inherit default :strike-through nil)))))
 
 ;;; Common Lisp
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-(setq inferior-lisp-program "/usr/bin/sbcl")
 (use-package sly
   :config
-  ;; Common Lisp
-  ;; Replace "sbcl" with the path to your implementation
-  ;; (setq sly-lisp-implementations
-  ;; 	'((sbcl ("/usr/bin/sbcl") :coding-system utf-8-unix)))
-  :bind (:map sly-mode-map
-	      ("C-c s" . sly-mrepl-sync)))
+  (setq inferior-lisp-program "/usr/bin/sbcl")
+  (defun ebn/setup-sly-mrepl ()
+    (interactive)
+    (bind-key (kbd "C-<up>")
+	      #'comint-previous-input 'sly-mrepl-mode-map))
+  :bind
+  (:map sly-mode-map
+	("C-c s" . sly-mrepl-sync))
+  :hook (sly-mrepl . ebn/setup-sly-mrepl))
 
 ;;; Haskell
 (use-package haskell-mode
