@@ -25,4 +25,6 @@
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
 
-(push '(font . "Iosevka-11") default-frame-alist)
+(push '(font . "Fantasque Sans Mono-14") default-frame-alist)
+
+
