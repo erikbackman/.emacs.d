@@ -1,7 +1,3 @@
-;;;; Theme
-(load-file "~/.emacs.d/themes/mindre-monochrome-theme.el")
-(load-theme 'mindre-monochrome t)
-
 ;; Package Management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -15,14 +11,26 @@
   (package-install 'use-package))
 
 (setq use-package-always-ensure t)
-(setq use-package-always-defer t)
+(setq use-package-always-defer nil)
+
+(use-package spacemacs-theme
+  :init
+  (load-theme 'spacemacs-dark t)
+  :custom-face
+  (mode-line-active ((t :box (:line-width 2 :style released-button))))
+  (mode-line-inactive ((t :box (:line-width 2 :style released-button))))
+  (org-todo ((t :background nil)))
+  :custom
+  (spacemacs-theme-comment-bg nil)
+  (spacemacs-theme-custom-colors
+   '((bg1 . "#151617"))))
 
 ;;; Misc settings
-(defalias 'yes-or-no-p 'y-or-n-p)
 (setq confirm-kill-emacs 'y-or-n-p)
-
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory)
-      blink-cursor-blinks 2)
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(setq blink-cursor-blinks 2)
+(setq-default line-spacing 0.1)
+(setq tab-bar-show nil)
 
 ;; Treesitter grammars
 (setq treesit-language-source-alist
@@ -30,12 +38,6 @@
 	(c . ("https://github.com/tree-sitter/tree-sitter-c"))))
 
 ;;; Functions
-(defun ebn/bury-scratch-buffer ()
-  (if (string= (buffer-name) "*scratch*")
-      (ignore (bury-buffer))
-    t))
-(add-hook 'kill-buffer-query-functions 'ebn/bury-scratch-buffer)
-
 (defvar ebn/toggle--buffers-alist
   '(("*Messages*" . view-echo-area-messages)))
 
@@ -47,11 +49,6 @@
 (defun ebn/toggle-messages ()
   (interactive)
   (ebn/toggle-buffer-window "*Messages*"))
-
-(defun ebn/find-file-at-point ()
-  (interactive)
-  (if-let ((file (ffap-file-at-point)))
-      (find-file file)))
 
 ;;; Built-in Packages
 (use-package emacs
@@ -66,20 +63,15 @@
   (inhibit-startup-screen t)
   (initial-scratch-message nil)
   (calc-display-trail t)
+  (comint-prompt-read-only t)
+  ;;(page-delimiter "\\#| ")
+  (grep-command "grep -E --color=auto -nH --null -e ")
   :init
   (put 'narrow-to-region 'disabled nil)
   (global-unset-key (kbd "C-x C-p")) ; UNBIND THE BANE OF MY EXISTENCE!
   (global-unset-key (kbd "C-z"))     ; and this...
   (global-unset-key (kbd "C-x C-z")) ; and this....
 
-  ;; (unless (version< emacs-version "29.0")
-  ;;   (setq completion-auto-help 'visible
-  ;;         completion-auto-select 'second-tab
-  ;;         completion-show-help nil
-  ;;         completions-sort nil
-  ;; 	  completions-max-height 20
-  ;;         completions-header-format nil))
-  
   :bind
   (:map global-map
 	("C-8" . backward-list)
@@ -98,7 +90,6 @@
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
 	("M-u" . upcase-dwim)
-	("M-g f" . ebn/find-file-at-point)
 	("C-c t l" . display-line-numbers-mode)
 	("C-c t s" . flyspell-mode)
 	("C-h ," . xref-find-definitions)
@@ -106,7 +97,8 @@
 	("C-<return>" . mark-sexp)
 	("C-x C-b" . ibuffer-other-window)
 	("C-x k" . kill-current-buffer)
-	("C-x ;" . comment-line)
+	("C-c ;" . comment-line)
+	("C-c C-;" . comment-line)
 	("s-ö" . mode-line-other-buffer)
 	("C-c t c" . calc)
 	("C-c C-t C-c" . calc)
@@ -116,12 +108,17 @@
 	("s-<down>" . scroll-other-window)
 	("C-c <prior>" . beginning-of-buffer)
 	("C-c <next>" . end-of-buffer)
+	("<prior>" . backward-page)
+	("<next>" . forward-page)
 	("C-x f" . find-file-other-window)
-	("C-1" . (lambda () (interactive) (bookmark-set "1")))
-	("C-2" . (lambda () (interactive) (bookmark-set "2")))
-	("C-<f1>" . (lambda () (interactive) (bookmark-jump "1")))
-	("C-<f2>" . (lambda () (interactive) (bookmark-jump "2")))
-	("C-x K" . kill-buffer-and-window)))
+	("C-c s" . scratch-buffer)
+	("C-x K" . kill-buffer-and-window)
+	("C-c j" . jump-to-register)
+	("C-c t t" . vterm)))
+
+(use-package shell
+  :bind (:map comint-mode-map
+	      ("C-l" . comint-clear-buffer)))
 
 (use-package delsel
   :commands (set-mark-command mark-sexp)
@@ -136,9 +133,7 @@
            (display-buffer-in-side-window)
            (window-height . 0.16)
            (side . bottom)
-           (slot . 1))
-	  ((derived-mode . proced-mode)
-	   (display-buffer-full-frame)))))
+           (slot . 1)))))
 
 (use-package winner
   :defer 2
@@ -153,40 +148,27 @@
   (repeat-mode 1)
   :custom
   (repeat-echo-function #'ignore)
-  (repeat-exit-timeout nil)
-  :bind
-  (:repeat-map my/to-word-repeat-map
-	       ("f" . forward-to-word)
-	       ("b" . backward-to-word))
-  (:repeat-map my/forward-word-repeat-map
-	       ("f" . forward-word)
-	       ("b" . backward-word))
-  (:repeat-map my/move-by-sexp-repeat-map
-	       ("f" . forward-sexp)
-	       ("b" . backward-sexp))
-  (:repeat-map my/backward-up-list-repeat-map
-	       ([up] . backward-up-list))
-  (:repeat-map my/backward-up-repeat-map
-	       ("u" . paredit-backward-up)
-	       ("d" . paredit-forward-down)))
+  (repeat-exit-timeout nil))
 
 (use-package eshell
-  :commands (eshell)
+  :preface
+  (require 'esh-mode)
+  (require 'em-smart)
+  (setq eshell-where-to-jump 'begin)
+  (setq eshell-review-quick-commands nil)
+  (setq eshell-smart-space-goes-to-end t)
   :custom
   (eshell-destroy-buffer-when-process-dies t)
   :config
-  (require 'esh-mode)
-
-  (defalias 'open 'find-file)
-
   (defun ebn/setup-eshell ()
     (interactive)
-    (with-temp-buffer
-      (call-process "bash" nil '(t nil) nil "-ci" "alias")
-      (goto-char (point-min))
-      (while (re-search-forward "alias \\(.+\\)='\\(.+\\)'$" nil t)
-        (eshell/alias (match-string 1) (match-string 2)))))
-
+    (add-to-list 'eshell-visual-options '("git" "--help" "--paginate"))
+    (add-to-list 'eshell-visual-subcommands '("git" "log" "diff" "show")))
+  
+  (defalias 'f 'find-file)
+  (defun eshell/gs () (vc-diff))
+  (defun eshell/ll () (funcall #'eshell/ls '-l))
+  (defun eshell/la () (funcall #'eshell/ls '-la))
   (defun ebn/eshell-clear ()
     (interactive)
     (eshell/clear-scrollback)
@@ -195,8 +177,7 @@
   (eshell-mode . ebn/setup-eshell)
   :bind
   ("C-c t e" . eshell)
-  (:map eshell-mode-map
-	("C-l" . ebn/eshell-clear)))
+  (:map eshell-mode-map ("C-l" . ebn/eshell-clear)))
 
 (use-package dired
   :ensure nil
@@ -208,7 +189,7 @@
     (let ((fn (dired-get-filename)))
       (kill-new fn)
       (message "%s saved to kill-ring." fn)))
-      
+  
   (setq dired-recursive-copies t
 	dired-recursive-deletes t
 	dired-dwim-target t
@@ -217,8 +198,8 @@
 	delete-by-moving-to-trash t)
 
   (setq dired-guess-shell-alist-user
-	'(("\\.mp4\\'" "mpv &>/dev/null")
-	  ("\\.pdf\\'" "mupdf")))
+	(list `(,(rx (or ".mp4'" ".mkv") eos) "mpv &>/dev/null")
+	      '("\\.pdf\\'" "mupdf")))
   
   (add-hook 'dired-mode-hook #'dired-omit-mode)
   :bind*
@@ -250,7 +231,8 @@
 	'((".*" "#emacs" "#systemcrafters" "#gentoo"))
 	erc-hide-list '("JOIN" "PART" "QUIT")
         erc-nick "ebn"
-	erc-prompt-for-password nil)
+	erc-prompt-for-password nil
+	erc-track-enable-keybindings t)
   (setq auth-sources '("~/.authinfo.gpg"))
   (set-face-attribute 'erc-prompt-face nil :background nil :foreground "#ae95c7")
   (setq erc-prompt (lambda () (concat "[" (buffer-name) "]"))))
@@ -258,10 +240,6 @@
 (use-package dictionary
   :custom
   (dictionary-server "dict.org"))
-
-(use-package ebn-pulse
-  :ensure nil
-  :commands (ebn/pulse-minor-mode))
 
 ;;; Backups
 (use-package no-littering
@@ -291,22 +269,6 @@
 	recentf-auto-cleanup 'never
 	consult-preview-key nil)
   (recentf-mode 1)
-  
-  (defvar consult--source-erc
-    `( :name "ERC"
-       :narrow ?i
-       :category erc
-       :history nil
-       :default nil
-       :action ,#'consult--buffer-action
-       :items
-       ,(lambda () (consult--buffer-query
-	       :sort 'visibility :as #'buffer-name
-	       :predicate
-	       (lambda (buf) (string-prefix-p "#" (buffer-name buf)))))) )
-
-   ;; (push consult--source-erc consult-buffer-sources)
-   ;; (setq consult-buffer-sources (remove 'consult--source-erc consult-buffer-sources))
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
   :init
   (setq completion-in-region-function
@@ -325,12 +287,25 @@
 	("C-c o" . consult-outline)
 	("M-g o" . consult-outline)
 	("C-x b" . consult-buffer)
+	("C-x p b" . consult-project-buffer)
 	("C-x B" . consult-buffer-other-window)
 	("C-c x" . consult-complex-command)
-	("C-c j" . consult-global-mark)
 	("C-c h" . consult-history)
-	("M-g g" . consult-goto-line)
+	("M-g g" . consult-imenu)
 	("C-c b" . consult-bookmark)))
+
+(use-package corfu
+  :custom
+  (corfu-auto-delay 0.2)
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-commit-predicate nil)
+  (corfu-quit-at-boundary t)
+  (corfu-quit-no-match t)
+  (corfu-echo-documentation nil)
+  :hook
+  (prog-mode . corfu-mode)
+  (sly-mrepl-mode . corfu-mode))
 
 ;;; Org
 (use-package org
@@ -438,45 +413,8 @@
   :load-path "lisp/"
   :after org)
 
-(use-package org-roam
-  :defer t
-  :disabled
-  :commands (org-roam-node-find org-roam-capture)
-  :custom
-  (org-roam-directory "~/org/org-roam")
-  (org-roam-completion-everywhere t)
-  (org-roam-capture-templates
-   `(("d" "default" plain "%?"
-      :if-new (file+head
-	       "%<%Y%m%d%H%M%S>-${slug}.org"
-	       ,(let ((options '("#+options: _:{}"
-				 "#+options: ^:{}"
-				 "#+startup: latexpreview"
-				 "#+startup: entitiespretty"
-				 "#+startup: inlineimages"
-				 "#+title: ${title}")))
-		  (mapconcat 'identity options "\n")))
-      :unnarrowed t)))
-  (org-roam-node-display-template "${title}")
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-	 ("C-c n f" . org-roam-node-find)
-	 ("C-c n g" . org-roam-graph)
-	 ("C-c n c" . org-roam-capture))
-  :config
-  (setq org-roam-node-display-template
-        (concat "${title:*} "
-                (propertize "${tags:10}" 'face 'org-tag)))
-  (org-roam-db-autosync-mode))
-
 ;;; LaTeX and math
 (use-package gnuplot :mode ("\\.gp\\'"))
-(use-package maxima
-  :config
-  (setq imaxima-fnt-size "Large")
-  :hook
-  (maxima-mode-hook . maxima-hook-function)
-  (maxima-inferior-mode-hook . maxima-hook-function)
-  :interpreter ("maxima" . maxima-mode))
 
 (use-package julia-mode
   :mode ("\\.jl\\'" . julia-mode)
@@ -538,6 +476,9 @@
    "qq" (lambda () (interactive) (laas-wrap-previous-object "sqrt"))))
 
 ;;; Lisp
+(font-lock-add-keywords
+ 'lisp-mode '(("\\;; \\(TODO\\) " 1 'font-lock-warning-face prepend)))
+
 (use-package paredit
   :config
   (define-key paredit-mode-map [remap paredit-newline] nil)
@@ -572,15 +513,36 @@
 ;;; Common Lisp
 (use-package sly
   :config
-  (setq inferior-lisp-program "/usr/bin/sbcl")
-  (defun ebn/setup-sly-mrepl ()
+  (setq inferior-lisp-program "/usr/bin/sbcl --dynamic-space-size 4GB")
+
+  (defun ebn/asdf-load-current-system ()
+    (interactive)
+    (when-let ((files (directory-files (project-root (project-current)) nil ".*\.\.asd")))
+      (sly-asdf-load-system (file-name-base (car files)))))
+
+  (defun ebn/sly-eval-replace ()
+  (interactive)
+  (sly-eval-async `(slynk:eval-and-grab-output ,(sly-last-expression))
+    (lambda (result)
+      (cl-destructuring-bind (output value) result
+        (backward-kill-sexp)
+	(insert (string-trim-right value " (.+)"))))))
+  
+  (defun ebn/setup-sly ()
     (interactive)
     (bind-key (kbd "C-<up>")
-	      #'comint-previous-input 'sly-mrepl-mode-map))
+	      #'comint-previous-input 'sly-mrepl-mode-map)
+    (bind-key (kbd "C-<down>")
+	      #'comint-next-input 'sly-mrepl-mode-map))
   :bind
+  ("C-c ," . sly-asdf-load-system)
   (:map sly-mode-map
-	("C-c s" . sly-mrepl-sync))
-  :hook (sly-mrepl . ebn/setup-sly-mrepl))
+	("C-c s" . sly-scratch))
+  (:map lisp-mode-map
+	("C-x p c" . ebn/asdf-load-current-system)
+	("<f5>" . ebn/asdf-load-current-system)
+	("C-c e" . ebn/sly-eval-replace))
+  :hook (sly-mrepl . ebn/setup-sly))
 
 ;;; Haskell
 (use-package haskell-mode
@@ -608,6 +570,8 @@
   (setq epg-pinentry-mode 'loopback)
   :custom
   (notmuch-show-logo nil)
+  (notmuch-search-oldest-first nil)
+  (notmuch-hello-recent-searches-max 0)
   (notmuch-saved-searches
    '((:name "inbox" :query "tag:inbox" :key "i")
      (:name "unread" :query "tag:unread" :key "u")
@@ -641,14 +605,6 @@
   :config
   (setq send-mail-function 'smtpmail-send-it))
 
-;;; Misc
-(use-package elfeed
-  :defer t
-  :commands (efleed elfeed-update)
-  :custom
-  (elfeed-feeds '(("https://www.gentoo.org/feeds/news.xml" gentoo)
-		  ("https://sachachua.com/blog/feed/" emacs))))
-
 (use-package rainbow-mode :defer t)
 
 (use-package pdf-tools
@@ -660,7 +616,7 @@
 	TeX-source-correlate-start-server t)
   :custom
   (pdf-view-midnight-invert nil)
-  (pdf-view-midnight-colors '("#e4e4ef" . "#101010"))
+  (pdf-view-midnight-colors '("#e4e4ef" . "#151617"))
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
   :hook
@@ -681,7 +637,7 @@
   (yas-reload-all))
 
 (use-package wgrep
-  :commands (occur embark-act grep))
+  :commands (grep project-find-regexp))
 
 (use-package avy
   :commands
@@ -692,6 +648,7 @@
   ("C-ö" . avy-goto-char-timer)
   ("M-G" . goto-line)
   ("C-c m" . avy-move-line)
+  ("C-c L" . avy-copy-line)
   (:map isearch-mode-map
 	("C-ö" . avy-isearch)))
 
@@ -702,28 +659,7 @@
 (use-package org-drill
   :commands (org-drill))
 
-(use-package corfu
-  :custom
-  (corfu-auto-delay 0.2)
-  (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-commit-predicate nil)
-  (corfu-quit-at-boundary t)
-  (corfu-quit-no-match t)
-  (corfu-echo-documentation nil)
-  :init
-  (global-corfu-mode))
-
-;; Carp
-(use-package clojure-mode)
-(use-package carp-mode
-  :load-path "lisp/carp-emacs"
-  :init
-  (require 'carp-mode)
-  (require 'inf-carp-mode)
+(use-package exec-path-from-shell
   :config
-  (let ((carp-dir (expand-file-name "~/carp")))
-    (setenv "CARP_DIR" carp-dir)
-    (add-to-list 'exec-path (concat carp-dir "/bin")))
-  (add-to-list 'auto-mode-alist '("\\.carp\\'" . carp-mode))
-  :hook (carp-mode . paredit-mode))
+  (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+  (exec-path-from-shell-copy-env "SSH_AUTH_SOCK"))
