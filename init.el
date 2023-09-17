@@ -1,3 +1,5 @@
+;(require 'ebn-exwm)
+
 ;; Package Management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -13,17 +15,13 @@
 (setq use-package-always-ensure t)
 (setq use-package-always-defer nil)
 
-(use-package spacemacs-theme
-  :init
-  (load-theme 'spacemacs-dark t)
+(use-package nordic-night-theme
   :custom-face
-  (mode-line-active ((t :box (:line-width 2 :style released-button))))
+  (mode-line ((t :box (:line-width 2 :style released-button))))
   (mode-line-inactive ((t :box (:line-width 2 :style released-button))))
-  (org-todo ((t :background nil)))
-  :custom
-  (spacemacs-theme-comment-bg nil)
-  (spacemacs-theme-custom-colors
-   '((bg1 . "#151617"))))
+  (org-hide ((t :background "#121212")))
+  :config
+  (load-theme 'nordic-night t))
 
 ;;; Misc settings
 (setq confirm-kill-emacs 'y-or-n-p)
@@ -76,22 +74,17 @@
   (:map global-map
 	("C-8" . backward-list)
 	("C-9" . forward-list)
+	("C-f" . forward-word)
+	("C-b" . backward-word)
 	("s-l" . windmove-right)
 	("s-j" . windmove-down)
 	("s-h" . windmove-left)
 	("s-k" . windmove-up)
-	("s-4" . other-window-prefix)
-	("C-f" . forward-word)
-	("C-b" . backward-word)
-	("M-f" . forward-word)
-	("M-1" . delete-other-frames)
 	("M-j" . join-line)
 	("s-r" . replace-regexp)
 	("M-z" . zap-up-to-char)
 	("M-c" . capitalize-dwim)
 	("M-u" . upcase-dwim)
-	("C-c t l" . display-line-numbers-mode)
-	("C-c t s" . flyspell-mode)
 	("C-h ," . xref-find-definitions)
 	("C-h e" . ebn/toggle-messages)
 	("C-<return>" . mark-sexp)
@@ -113,8 +106,7 @@
 	("C-x f" . find-file-other-window)
 	("C-c s" . scratch-buffer)
 	("C-x K" . kill-buffer-and-window)
-	("C-c j" . jump-to-register)
-	("C-c t t" . vterm)))
+	("C-c j" . jump-to-register)))
 
 (use-package shell
   :bind (:map comint-mode-map
@@ -199,7 +191,7 @@
 
   (setq dired-guess-shell-alist-user
 	(list `(,(rx (or ".mp4'" ".mkv") eos) "mpv &>/dev/null")
-	      '("\\.pdf\\'" "mupdf")))
+	      '("\\.pdf\\'" "mupdf &>/dev/null")))
   
   (add-hook 'dired-mode-hook #'dired-omit-mode)
   :bind*
@@ -260,7 +252,10 @@
 
 (use-package orderless
   :after vertico
-  :custom (completion-styles '(orderless)))
+  :config
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package consult
   :demand
@@ -270,13 +265,6 @@
 	consult-preview-key nil)
   (recentf-mode 1)
   (add-hook 'buffer-list-update-hook #'recentf-track-opened-file)
-  :init
-  (setq completion-in-region-function
-	(lambda (&rest args)
-	  (apply (if vertico-mode
-		     #'consult-completion-in-region
-		   #'completion--in-region)
-		 args)))
   :bind
   (:map global-map
 	("C-c r" . consult-recent-file)
@@ -309,28 +297,20 @@
 
 ;;; Org
 (use-package org
+  :ensure cdlatex
   :commands (org-agenda
 	     org-capture
 	     org-cdlatex-mode)
   :config
   (require 'org-mouse)
 
-  (set-face-attribute 'fixed-pitch nil :font "JetBrains Mono")
+  (set-face-attribute 'fixed-pitch nil :font "Fantasque Sans Mono")
   (defun ebn/org-cdlatex-tab ()
     (interactive)
     (if (eobp) (progn
 		 (org-edit-src-exit)
 		 (org-latex-preview))
       (cdlatex-tab)))
-
-  (defun ebn/diary-last-day-of-month (date)
-    "Return `t` if DATE is the last day of the month."
-    (let* ((day (calendar-extract-day date))
-	   (month (calendar-extract-month date))
-	   (year (calendar-extract-year date))
-	   (last-day-of-month
-	    (calendar-last-day-of-month month year)))
-      (= day last-day-of-month)))
   
   (plist-put org-format-latex-options :scale 1.5)
   (org-babel-do-load-languages
@@ -385,7 +365,7 @@
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
 				 "|" "DELEGATED(D)" "CANCELLED(c)")))
   (org-agenda-current-time-string "← now ─────────")
-  (org-agenda-files `("gtd.org" "someday.org" "tickler.org"
+  (org-agenda-files `("gtd.org" "someday.org"
 		      ,@(directory-files-recursively "~/Dropbox/courses/active/" ".org" t nil t)))
   (org-capture-templates
    '(("i" "Inbox" entry (file "~/org/inbox.org"))
@@ -393,7 +373,9 @@
       "* TODO %?\n  %i\n  %a")
      ("s" "Someday" entry (file "~/org/someday.org")
       "* TODO %?\n  %i\n  %a")))
-  :bind*
+  :bind
+  (:map org-src-mode-map
+	("<tab>" . ebn/org-cdlatex-tab))
   (:map org-mode-map
 	("C-c h" . consult-org-heading)
 	("C-<return>" . org-meta-return)
@@ -433,16 +415,19 @@
 
 (use-package tex
   :ensure auctex
+  :init (require 'cdlatex)
+  :custom
+  (TeX-view-program-selection '((output-pdf "PDF Tools")))
+  (TeX-source-correlate-start-server t)
+  (TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
   :hook
   (LaTeX-mode . turn-on-auto-fill))
 
 (use-package cdlatex
+  :init (require 'yasnippet)
   :hook
   (LaTeX-mode . cdlatex-mode)
-  (LaTeX-mode . yas-minor-mode-on)
-  :bind
-  (:map org-src-mode-map
-	("<tab>" . ebn/org-cdlatex-tab)))
+  (LaTeX-mode . yas-minor-mode-on))
 
 (use-package laas
   :hook (LaTeX-mode . laas-mode)
@@ -568,10 +553,18 @@
   :ensure nil
   :init
   (setq epg-pinentry-mode 'loopback)
+  :config
+  (remove-hook 'notmuch-show-hook #'notmuch-show-turn-on-visual-line-mode)
+  (remove-hook 'notmuch-search-hook #'notmuch-hl-line-mode)
   :custom
   (notmuch-show-logo nil)
   (notmuch-search-oldest-first nil)
   (notmuch-hello-recent-searches-max 0)
+  (notmuch-hello-sections
+   '(notmuch-hello-insert-header
+     notmuch-hello-insert-saved-searches
+     notmuch-hello-insert-recent-searches
+     notmuch-hello-insert-alltags))
   (notmuch-saved-searches
    '((:name "inbox" :query "tag:inbox" :key "i")
      (:name "unread" :query "tag:unread" :key "u")
@@ -603,25 +596,22 @@
 (use-package sendmail
   :after notmuch
   :config
-  (setq send-mail-function 'smtpmail-send-it))
+  (setq send-mail-function 'smtpmail-send-it)
+  (setq user-mail-address "contact@ebackman.net")
+  (setq user-full-name "Erik Bäckman"))
 
 (use-package rainbow-mode :defer t)
 
 (use-package pdf-tools
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
   :mode ("\\.pdf\\'" . pdf-view-mode)
-  :init
-  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-	TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
-	TeX-source-correlate-start-server t)
   :custom
   (pdf-view-midnight-invert nil)
   (pdf-view-midnight-colors '("#e4e4ef" . "#151617"))
-  (add-hook 'TeX-after-compilation-finished-functions
-            #'TeX-revert-document-buffer)
   :hook
   (pdf-view-mode . auto-revert-mode)
   :config
+  (setq TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
   (pdf-tools-install))
 
 ;;; Rest/WIP
