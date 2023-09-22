@@ -192,8 +192,8 @@
   (setq dired-guess-shell-alist-user
 	(list `(,(rx (or ".mp4'" ".mkv") eos) "mpv &>/dev/null")
 	      '("\\.pdf\\'" "mupdf &>/dev/null")))
-  
-  (add-hook 'dired-mode-hook #'dired-omit-mode)
+  :hook
+  (dired-mode . dired-omit-mode)
   :bind*
   ("C-x d" . dired)
   ("C-x C-d" . dired-other-window)
@@ -335,6 +335,7 @@
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
   :custom
+  (org-directory "~/Dropbox/org")
   (org-refile-targets '((nil :maxlevel . 9)
 			(org-agenda-files :maxlevel . 9)))
   (org-outline-path-complete-in-steps nil)
@@ -370,8 +371,7 @@
 				 "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)"
 				 "|" "DELEGATED(D)" "CANCELLED(c)")))
   (org-agenda-current-time-string "← now ─────────")
-  (org-agenda-files `("gtd.org" "someday.org"
-		      ,@(directory-files-recursively "~/Dropbox/courses/active/" ".org" t nil t)))
+  (org-agenda-files `("gtd.org" "someday.org"))
   (org-capture-templates
    '(("i" "Inbox" entry (file "~/org/inbox.org"))
      ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
@@ -646,10 +646,6 @@
   ("C-c L" . avy-copy-line)
   (:map isearch-mode-map
 	("C-ö" . avy-isearch)))
-
-(use-package ebn-course
-  :load-path "lisp/"
-  :commands (ebn/select-course))
 
 (use-package org-drill
   :commands (org-drill))
