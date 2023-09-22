@@ -335,6 +335,11 @@
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
   (add-hook 'org-mode-hook 'org-display-inline-images)
   :custom
+  (org-refile-targets '((nil :maxlevel . 9)
+			(org-agenda-files :maxlevel . 9)))
+  (org-outline-path-complete-in-steps nil)
+  (org-refile-use-outline-path t)
+  (org-archive-location "~/org/archived/%s_archive::")
   (org-use-speed-commands t)
   (org-confirm-babel-evaluate nil)
   (org-log-into-drawer t)
