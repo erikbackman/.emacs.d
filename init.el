@@ -336,11 +336,11 @@
   (add-hook 'org-mode-hook 'org-display-inline-images)
   :custom
   (org-directory "~/Dropbox/org")
+  (org-archive-location "~/Dropbox/org/archived/%s_archive::")
   (org-refile-targets '((nil :maxlevel . 9)
 			(org-agenda-files :maxlevel . 9)))
   (org-outline-path-complete-in-steps nil)
   (org-refile-use-outline-path t)
-  (org-archive-location "~/org/archived/%s_archive::")
   (org-use-speed-commands t)
   (org-confirm-babel-evaluate nil)
   (org-log-into-drawer t)
@@ -373,10 +373,10 @@
   (org-agenda-current-time-string "← now ─────────")
   (org-agenda-files `("gtd.org" "someday.org"))
   (org-capture-templates
-   '(("i" "Inbox" entry (file "~/org/inbox.org"))
-     ("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
+   `(("i" "Inbox" entry (file ,(file-name-concat org-directory "inbox.org")))
+     ("t" "Todo" entry (file+headline ,(file-name-concat org-directory "gtd.org") "Tasks")
       "* TODO %?\n  %i\n  %a")
-     ("s" "Someday" entry (file "~/org/someday.org")
+     ("s" "Someday" entry (file ,(file-name-concat org-directory "someday.org"))
       "* TODO %?\n  %i\n  %a")))
   :bind
   (:map org-src-mode-map
