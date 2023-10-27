@@ -168,5 +168,6 @@
 
 (use-package sly
   :config
-  (setq inferior-lisp-program
-	"/home/ebn/.roswell/impls/x86-64/linux/sbcl-bin/2.3.9/bin/sbcl --dynamic-space-size 4GB"))
+  (setq sly-default-lisp 'roswell
+	sly-lisp-implementations
+	`((roswell ("ros" "-Q" "run" "--dynamic-space-size 4GB")))))
