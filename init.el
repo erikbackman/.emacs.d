@@ -58,6 +58,7 @@
         completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package corfu
+  :demand
   :custom
   (corfu-auto t)
   :config
@@ -128,7 +129,6 @@
 		 (interactive)
 		 (notmuch-search-add-tag '("+deleted"))))))
 
-
 (use-package smtpmail
   :commands (notmuch)
   :after notmuch
@@ -160,6 +160,11 @@
   (:map global-map
 	("C-c n n" . #'org-capture)
 	("C-c n a" . #'org-agenda)))
+
+(use-package paredit
+  :hook
+  (lisp-mode . paredit-mode)
+  (emacs-lisp-mode . paredit-mode))
 
 (use-package sly
   :config
