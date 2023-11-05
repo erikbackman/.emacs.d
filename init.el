@@ -35,6 +35,7 @@
 (global-set-key (kbd "C-<prior>") #'beginning-of-buffer)
 (global-set-key (kbd "C-<next>") #'end-of-buffer)
 (global-set-key (kbd "C-h e") #'my-view-messages)
+(global-set-key (kbd "C-c t c") #'calc)
 
 ;;; Package configuration
 ;;;
@@ -43,19 +44,24 @@
   :demand
   :config (load-theme 'kaolin-temple t))
 
+(use-package abbrev
+  :ensure nil
+  :bind ("C-<tab>" . expand-abbrev))
+
 (use-package vertico :demand :config (vertico-mode))
 (use-package consult
   :config
   (setq consult-preview-key nil)
   :bind
   ("M-g g" . #'consult-goto-line)
-  ("C-c l" . #'consult-line))
+  ("C-c l" . #'consult-line)
+  ("C-c i" . #'consult-imenu))
 
 (use-package orderless
-  :config
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
+  :custom
+  (completion-styles '(orderless flex))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package corfu
   :demand
@@ -130,7 +136,6 @@
 		 (notmuch-search-add-tag '("+deleted"))))))
 
 (use-package smtpmail
-  :commands (notmuch)
   :after notmuch
   :config
   (setq smtpmail-default-smtp-server "smtp.mailbox.org"
@@ -140,7 +145,6 @@
 	smtpmail-queue-mail nil))
 
 (use-package sendmail
-  :commands (notmuch)
   :after notmuch
   :config
   (setq send-mail-function 'smtpmail-send-it)
