@@ -1,6 +1,8 @@
 ;; Package managment
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
+;; (setq Info-default-directory-list (append '("~/.emacs.d/info")
+;; 					  Info-default-directory-list))
 (setq package-native-compile t)
 (setq use-package-always-ensure t)
 (setq use-package-always-defer t)
@@ -15,34 +17,58 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
+(setq prettify-symbols-mode t)
+(setq dired-dwim-target t)
+(setopt compilation-scroll-output t)
+
 (delete-selection-mode)
 (repeat-mode)
 
+(add-to-list 'exec-path "/home/ebn/.local/bin")
+
 ;; Functions
 (defun my-view-messages ()
+  "Toggle message buffer."
   (interactive)
   (if-let ((w (get-buffer-window "*Messages*")))
       (delete-window w)
     (view-echo-area-messages)))
 
 ;; Global keybinds
-(global-set-key (kbd "M-j") #'join-line)
-(global-set-key (kbd "C-x k") #'kill-current-buffer)
-(global-set-key (kbd "C-x C-b") #'ibuffer)
-(global-set-key (kbd "C-<return>") #'mark-sexp)
-(global-set-key (kbd "C-8") #'backward-list)
-(global-set-key (kbd "C-9") #'forward-list)
-(global-set-key (kbd "C-<prior>") #'beginning-of-buffer)
-(global-set-key (kbd "C-<next>") #'end-of-buffer)
-(global-set-key (kbd "C-h e") #'my-view-messages)
-(global-set-key (kbd "C-c t c") #'calc)
+(defmacro gbind (key command)
+  "Globally map `KEY' to `COMMAND'."
+  `(global-set-key ,(kbd key) ,command))
+
+(gbind "M-j" #'join-line)
+(gbind "C-x k" #'kill-current-buffer)
+(gbind "C-x C-b" #'ibuffer)
+(gbind "C-<return>" #'mark-sexp)
+(gbind "C-8" #'backward-list)
+(gbind "C-9" #'forward-list)
+(gbind "C-<prior>" #'beginning-of-buffer)
+(gbind "C-<next>" #'end-of-buffer)
+(gbind "C-h e" #'my-view-messages)
+(gbind "C-c t c" #'calc)
+(gbind "C-<tab>" #'hippie-expand)
 
 ;;; Package configuration
 ;;;
 
-(use-package kaolin-themes
+(use-package mindre-dark-theme
   :demand
+  :load-path "lisp/"
+  :config (load-theme 'mindre-dark t))
+
+(use-package kaolin-themes
+  :disabled t
+  :demand
+  :custom-face
+  (mode-line ((t :box (:line-width -1 :style released-button))))
   :config (load-theme 'kaolin-temple t))
+
+(use-package comint
+  :ensure nil
+  :bind (:map comint-mode-map ("C-l" . #'comint-clear-buffer)))
 
 (use-package abbrev
   :ensure nil
@@ -53,13 +79,13 @@
   :config
   (setq consult-preview-key nil)
   :bind
-  ("M-g g" . #'consult-goto-line)
   ("C-c l" . #'consult-line)
-  ("C-c i" . #'consult-imenu))
+  ("C-ö" . #'consult-goto-line)
+  ("C-c g" . #'consult-imenu))
 
 (use-package orderless
   :custom
-  (completion-styles '(orderless flex))
+  (completion-styles '(orderless basic flex))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion)))))
 
@@ -69,6 +95,14 @@
   (corfu-auto t)
   :config
   (global-corfu-mode))
+
+(use-package cape
+  :config
+  (defun init-cape ()
+    (interactive)
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file))
+  :hook (zig-mode . init-cape))
 
 (use-package pdf-tools
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
@@ -153,13 +187,26 @@
 
 (use-package org
   :config
-  (setq org-default-notes-file "/home/ebn/org/notes.org")
-  (setq org-agenda-files '("notes.org" "life.org" "study.org"))
-  (setq org-capture-templates
-	'( ("t" "Todo" entry (file+headline "life.org" "Tasks")
-	    "* TODO %?\n %i\n")
-	   ("s" "Study Todo" entry (file+headline "study.org" "Tasks")
-	    "* TODO %? %^G\n DEADLINE:%^t\n %i\n")) )
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((julia . t)
+     (R . t)
+     (latex . t)))
+  :custom
+  (org-latex-listings 'minted)
+  (org-confirm-babel-evaluate nil)
+  (org-latex-pdf-process
+   '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  (org-src-fontify-natively t)
+  (org-default-notes-file "/home/ebn/org/notes.org")
+  (org-agenda-files '("notes.org" "life.org" "study.org"))
+  (org-capture-templates
+   '( ("t" "Todo" entry (file+headline "life.org" "Tasks")
+       "* TODO %?\n %i\n")
+      ("s" "Study Todo" entry (file+headline "study.org" "Tasks")
+       "* TODO %? %^G\n DEADLINE:%^t\n %i\n")) )
   :bind
   (:map global-map
 	("C-c n n" . #'org-capture)
@@ -168,10 +215,42 @@
 (use-package paredit
   :hook
   (lisp-mode . paredit-mode)
-  (emacs-lisp-mode . paredit-mode))
+  (emacs-lisp-mode . paredit-mode)
+  (scheme-mode . paredit-mode)
+  :bind (:map global-map
+	      ("C-8" . #'paredit-backward)
+	      ("C-9" . #'paredit-forward)
+	      ("s-u" . #'paredit-backward-up)
+	      ("s-n" . #'paredit-forward-down)))
 
 (use-package sly
   :config
   (setq sly-default-lisp 'roswell
 	sly-lisp-implementations
-	`((roswell ("ros" "-Q" "run" "--dynamic-space-size 4GB")))))
+	`((roswell ("ros" "-Q" "run" "dynamic-space-size=4GB"))))
+  (defun my-setup-sly-repl ()
+    (interactive)
+    (define-key sly-mrepl-mode-map (kbd "C-<up>") #'comint-previous-input)
+    (define-key sly-mrepl-mode-map (kbd "C-<down>") #'comint-next-input))
+  (add-hook 'sly-mrepl-mode-hook #'my-setup-sly-repl))
+
+(use-package julia-mode
+  :config
+  (add-to-list
+   'exec-path
+   "/home/ebn/.julia/juliaup/julia-1.9.4+0.x64.linux.gnu/bin/")
+  :hook (julia-mode . julia-repl-mode))
+
+(use-package julia-repl
+  :init
+  (setenv "JULIA_NUM_THREADS" "8")
+  :config
+  (julia-repl-set-terminal-backend 'vterm))
+
+(use-package zig-mode
+  :config
+  (add-to-list 'exec-path "/home/ebn/opt/zig/"))
+
+(use-package exec-path-from-shell
+  :init
+  (exec-path-from-shell-initialize))
