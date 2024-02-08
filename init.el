@@ -20,6 +20,7 @@
 (setq prettify-symbols-mode t)
 (setq dired-dwim-target t)
 (setopt compilation-scroll-output t)
+(setq dired-listing-switches "-alh")
 
 (delete-selection-mode)
 (repeat-mode)
