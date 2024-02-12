@@ -358,7 +358,7 @@ Takes care of adding or removing hooks when the
     '(read-multiple-choice-face ((t (:inherit mindre-strong))))
     '(nobreak-hyphen ((t (:inherit mindre-strong))))
     '(nobreak-space ((t (:inherit mindre-strong))))
-    '(help-argument-name ((t (:inherit mindre-verbatim))))
+    '(help-argument-name ((t (:inherit mindre-type))))
     '(help-key-binding ((t :inherit mindre-verbatim)))
     '(tabulated-list-fake-header ((t (:inherit mindre-strong))))
     '(tool-bar ((t (:inherit mindre-faded-i))))
