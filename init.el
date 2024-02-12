@@ -1,8 +1,6 @@
 ;; Package managment
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
-;; (setq Info-default-directory-list (append '("~/.emacs.d/info")
-;; 					  Info-default-directory-list))
 (setq package-native-compile t)
 (setq use-package-always-ensure t)
 (setq use-package-always-defer t)
@@ -59,13 +57,6 @@
   :demand
   :load-path "lisp/"
   :config (load-theme 'mindre-dark t))
-
-(use-package kaolin-themes
-  :disabled t
-  :demand
-  :custom-face
-  (mode-line ((t :box (:line-width -1 :style released-button))))
-  :config (load-theme 'kaolin-temple t))
 
 (use-package comint
   :ensure nil
