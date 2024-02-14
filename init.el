@@ -81,12 +81,13 @@
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion)))))
 
-(use-package corfu
-  :demand
-  :custom
-  (corfu-auto t)
+(use-package completion-preview
+  :load-path "lisp/"
   :config
-  (global-corfu-mode))
+  (completion-preview-mode)
+  :bind
+  ("C-," . #'completion-preview-prev-candidate)
+  ("C-." . #'completion-preview-next-candidate))
 
 (use-package cape
   :config
