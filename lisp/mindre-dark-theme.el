@@ -34,8 +34,8 @@
 (eval-and-compile
   (defconst mindre-dark-theme-colors-alist
     '(;; Basic
-      (fg-main . "#eeeeee")
-      (bg-main . "#181818")
+      (fg-main . "floral white")
+      (bg-main . "#0d282f")
       (bg-active . "#101010")
       (bg-inactive . "#1c2023")
       (black . "#000000")
@@ -267,7 +267,7 @@ Takes care of adding or removing hooks when the
     `(default ((t (:background ,bg-main :foreground ,fg-main))))
 
     `(highlight ((t (:background "#444444" :foreground "white"))))
-    `(mindre-highlight ((t (:background "#AB47BC"))))
+    `(mindre-highlight ((t (:background "#2f4f4f"))))
     `(mindre-subtle ((t (:background ,faded-color))))
 
     `(mindre-subtle-i ((t (:foreground ,gray-light))))
@@ -281,13 +281,13 @@ Takes care of adding or removing hooks when the
 
     `(mindre-keyword ((t (:foreground ,peach :bold t))))
     `(mindre-type ((t (:foreground ,orange))))
-    `(mindre-verbatim ((t (:foreground "#87af5f"))))
+    `(mindre-verbatim ((t (:foreground "#8be090"))))
 
     `(mindre-strong ((t ,(when mindre-use-more-bold '(:weight semibold) :foreground "#96a6c8"))))
     `(mindre-strong-i ((t (:foreground ,bg-main :background ,fg-main :weight bold))))
     `(mindre-bold ((t (:foreground "#ffffff" :background unspecified :bold t))))
 
-    `(mindre-warning ((t (:foreground ,orange))))
+    `(mindre-warning ((t (:foreground "firebrick4"))))
     `(mindre-note ((t (:foreground ,green))))
     `(mindre-error ((t (:foreground ,red))))
     `(mindre-critical ((t (:foreground ,bg-main :background ,red))))
@@ -300,7 +300,7 @@ Takes care of adding or removing hooks when the
 
     `(mindre-border ((t (:foreground ,gray-light :box (:color "#2c2c2c" :line-width 1)))))
 
-    `(mindre-bar ((t (:foreground ,fg-main :background "#121212" :inherit mindre-border))))
+    `(mindre-bar ((t (:foreground ,fg-main :background "tan" :inherit mindre-border))))
     `(mindre-bar-inactive ((t (:foreground "#535c65" :background ,bg-inactive :inherit mindre-border))))
 
     `(mindre-button ((t (:box (:color ,gray-silver :style released-button) :background ,bg-inactive))))
@@ -316,8 +316,8 @@ Takes care of adding or removing hooks when the
     `(mindre-prio-4 ((t (:foreground ,red))))
     
     ;; --- Header & mode line -------------------------------------------
-    `(mode-line ((t (:inherit mindre-bar))))
-    `(mode-line-inactive ((t (:inherit mindre-bar-inactive))))
+    `(mode-line ((t (:background "tan" :foreground "#051013"))))
+    `(mode-line-inactive ((t (:background "dark slate grey" :foreground "#9ea9ac"))))
     `(mode-line-buffer-id ((t (:weight regular :background unspecified))))
     `(mode-line-emphasis ((t (:weight regular :background unspecified))))
     `(header-line ((t (:inherit mindre-bar :box nil))))
@@ -343,10 +343,10 @@ Takes care of adding or removing hooks when the
     ;; --- General ------------------------------------------------------
     '(buffer-menu-buffer ((t (:inherit mindre-strong))))
     '(minibuffer-prompt ((t (:inherit mindre-strong))))
-    `(isearch ((t (:inherit (mindre-strong) :background "#AB47BC" :foreground ,fg-main))))
+    `(isearch ((t (:inherit (mindre-strong) :background "firebrick4" :foreground "white"))))
     '(isearch-fail ((t (:inherit mindre-faded))))
     `(isearch-group-1 ((t (:foreground ,bg-main :background ,purple))))
-    '(show-paren-match ((t (:weight bold :foreground "#AB47BC"))))
+    '(show-paren-match ((t (:weight bold :foreground "deep pink"))))
     '(show-paren-mismatch ((t (:inherit mindre-critical))))
     `(lazy-highlight ((t (:background ,gray-light :foreground ,bg-main))))
     '(trailing-whitespace ((t (:inherit mindre-subtle))))
@@ -413,7 +413,7 @@ Takes care of adding or removing hooks when the
     `(window-divider ((t (:foreground ,bg-main))))
     '(window-divider-first-pixel ((t (:inherit window-divider))))
     '(window-divider-last-pixel ((t (:inherit window-divider))))
-    `(vertical-border ((t (:foreground "#282e32"))))
+    `(vertical-border ((t (:foreground "gray5"))))
 
     ;; --- Tab bar ------------------------------------------------------
     '(tab-bar ((t (:inherit mindre-bar))))
@@ -436,16 +436,16 @@ Takes care of adding or removing hooks when the
     '(line-number-minor-tick ((t (:inherit mindre-faded))))
 
     ;; --- Font lock ----------------------------------------------------
-    '(font-lock-comment-face ((t (:foreground "#bcbcbc" :slant italic))))
+    '(font-lock-comment-face ((t (:foreground "#bcbcbc"))))
     '(font-lock-doc-face ((t (:inherit mindre-faded :foreground "gray60"))))
     `(font-lock-string-face ((t (:inherit mindre-verbatim))))
     '(font-lock-constant-face ((t (:inherit mindre-type))))
     `(font-lock-warning-face ((t (:inherit mindre-warning))))
     `(font-lock-function-name-face ((t (:inherit mindre-strong :foreground "white"))))
     `(font-lock-variable-name-face ((t (:inherit mindre-default))))
-    '(font-lock-builtin-face ((t (:inherit mindre-keyword))))
+    '(font-lock-builtin-face ((t (:inherit mindre-keyword :bold nil))))
     `(font-lock-type-face ((t (:inherit mindre-type))))
-    '(font-lock-keyword-face ((t (:inherit mindre-keyword))))
+    '(font-lock-keyword-face ((t (:inherit mindre-keyword :bold t))))
 
     '(shr-h2 ((t :inherit mindre-bold)))
 
@@ -648,9 +648,9 @@ Takes care of adding or removing hooks when the
     '(outline-8 ((t (:inherit mindre-strong))))
 
     ;; --- Orderless ------------------------------------------------------
-    '(orderless-match-face-0 ((t (:inherit mindre-bold))))
-    '(orderless-match-face-1 ((t (:inherit mindre-bold))))
-    '(orderless-match-face-2 ((t (:inherit mindre-bold))))
+    '(orderless-match-face-0 ((t (:foreground "deep pink" :underline t))))
+    '(orderless-match-face-1 ((t (:foreground "deep pink" :underline t))))
+    '(orderless-match-face-2 ((t (:foreground "deep pink" :underline t))))
     '(orderless-match-face-3 ((t (:inherit mindre-bold))))
 
     ;; --- Flyspell ----------------------------------------------------
