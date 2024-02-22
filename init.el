@@ -1,3 +1,4 @@
+;; (add-to-list 'eshell-modules-list 'eshell-tramp) ; use eshell-sudo
 ;; Package managment
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -29,8 +30,6 @@
 (delete-selection-mode)
 (repeat-mode)
 
-;; (add-to-list 'eshell-modules-list 'eshell-tramp) ; use eshell-sudo
-
 ;; Functions
 (defun my-view-messages ()
   "Toggle message buffer."
@@ -38,6 +37,10 @@
   (if-let ((w (get-buffer-window "*Messages*")))
       (delete-window w)
     (view-echo-area-messages)))
+
+(defun my-find-definitions ()
+  (interactive)
+  (call-interactively 'xref-find-definitions))
 
 ;; Global keybinds
 (defmacro gbind (key command)
@@ -55,6 +58,7 @@
 (gbind "C-h e" #'my-view-messages)
 (gbind "C-c t c" #'calc)
 (gbind "C-<tab>" #'hippie-expand)
+(gbind "C-ö" 'my-find-definitions)
 
 ;;; Package configuration
 ;;;
