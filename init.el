@@ -5,25 +5,31 @@
 (setq use-package-always-ensure t)
 (setq use-package-always-defer t)
 
+;; Path
+(add-to-list 'exec-path "/home/ebn/.local/bin")
+(use-package exec-path-from-shell
+  :init
+  (exec-path-from-shell-initialize))
+
 ;; Basic settings
 (setq custom-file "~/.emacs.d/custom.el")
-(setq tab-always-indent 'complete)
 (setq completion-auto-select 'second-tab)
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
 
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-(setq prettify-symbols-mode t)
 (setq dired-dwim-target t)
 (setopt compilation-scroll-output t)
 (setq dired-listing-switches "-alh")
+(setopt initial-scratch-message nil)
 
 (delete-selection-mode)
 (repeat-mode)
 
-(add-to-list 'exec-path "/home/ebn/.local/bin")
+;; (add-to-list 'eshell-modules-list 'eshell-tramp) ; use eshell-sudo
 
 ;; Functions
 (defun my-view-messages ()
@@ -62,40 +68,27 @@
   :ensure nil
   :bind (:map comint-mode-map ("C-l" . #'comint-clear-buffer)))
 
-(use-package abbrev
-  :ensure nil
-  :bind ("C-<tab>" . expand-abbrev))
-
-(use-package vertico :demand :config (vertico-mode))
-(use-package consult
-  :config
-  (setq consult-preview-key nil)
-  :bind
-  ("C-c l" . #'consult-line)
-  ("C-ö" . #'consult-goto-line)
-  ("C-c g" . #'consult-imenu))
-
-(use-package orderless
-  :custom
-  (completion-styles '(orderless basic flex))
-  (completion-category-defaults nil)
-  (completion-category-overrides '((file (styles partial-completion)))))
-
 (use-package completion-preview
+  :demand t
   :load-path "lisp/"
-  :config
-  (completion-preview-mode)
+  :init
+  (require 'completion-preview)
   :bind
   ("C-," . #'completion-preview-prev-candidate)
-  ("C-." . #'completion-preview-next-candidate))
+  ("C-." . #'completion-preview-next-candidate)
+  :config
+  (completion-preview-mode))
 
 (use-package cape
   :config
   (defun init-cape ()
     (interactive)
     (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-    (add-to-list 'completion-at-point-functions #'cape-file))
-  :hook (zig-mode . init-cape))
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (completion-preview-mode))
+  :hook ((zig-mode . init-cape)
+	 (eshell-mode . init-cape)
+	 (emacs-lisp-mode . init-cape)))
 
 (use-package pdf-tools
   :commands (pdf-view-mode pdf-tools-install doc-view-mode)
@@ -210,7 +203,7 @@
   (lisp-mode . paredit-mode)
   (emacs-lisp-mode . paredit-mode)
   (scheme-mode . paredit-mode)
-  :bind (:map global-map
+  :bind (:map lisp-mode-map
 	      ("C-8" . #'paredit-backward)
 	      ("C-9" . #'paredit-forward)
 	      ("s-u" . #'paredit-backward-up)
@@ -242,8 +235,5 @@
 
 (use-package zig-mode
   :config
-  (add-to-list 'exec-path "/home/ebn/opt/zig/"))
-
-(use-package exec-path-from-shell
-  :init
-  (exec-path-from-shell-initialize))
+  (add-to-list 'exec-path "/home/ebn/opt/zig/")
+  :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
