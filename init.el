@@ -242,5 +242,6 @@
 (use-package zig-mode
   :config
   (add-to-list 'exec-path "/home/ebn/opt/zig/")
+  (require 'semantic/symref/grep)
   (add-to-list 'semantic-symref-filepattern-alist '(zig-mode "*.zig"))
   :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
