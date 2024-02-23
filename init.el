@@ -27,6 +27,8 @@
 (setq dired-listing-switches "-alh")
 (setopt initial-scratch-message nil)
 
+(unbind-key (kbd "C-z"))
+
 (delete-selection-mode)
 (repeat-mode)
 
@@ -240,4 +242,5 @@
 (use-package zig-mode
   :config
   (add-to-list 'exec-path "/home/ebn/opt/zig/")
+  (add-to-list 'semantic-symref-filepattern-alist '(zig-mode "*.zig"))
   :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
