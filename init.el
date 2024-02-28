@@ -1,4 +1,3 @@
-;; (add-to-list 'eshell-modules-list 'eshell-tramp) ; use eshell-sudo
 ;; Package managment
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -15,19 +14,17 @@
 ;; Basic settings
 (setq custom-file "~/.emacs.d/custom.el")
 (setq completion-auto-select 'second-tab)
-(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
-
+(setq dired-dwim-target t)
+(setopt compilation-scroll-output t)
+(setq dired-listing-switches "-alh")
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
-
-(setq dired-dwim-target t)
-(setopt compilation-scroll-output t)
-(setq dired-listing-switches "-alh")
 (setopt initial-scratch-message nil)
 
-(unbind-key (kbd "C-z"))
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
+(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
 (delete-selection-mode)
 (repeat-mode)
@@ -49,6 +46,7 @@
   "Globally map `KEY' to `COMMAND'."
   `(global-set-key ,(kbd key) ,command))
 
+(unbind-key (kbd "C-z"))
 (gbind "M-j" #'join-line)
 (gbind "C-x k" #'kill-current-buffer)
 (gbind "C-x C-b" #'ibuffer)
@@ -68,7 +66,9 @@
 (use-package mindre-dark-theme
   :demand
   :load-path "lisp/"
-  :config (load-theme 'mindre-dark t))
+  :config
+  (load-theme 'mindre-dark t)
+  (set-face-attribute 'mode-line-inactive nil :background "dark slate grey" :foreground "#9ea9ac" :box '(:color "grey5" :line-width 1)))
 
 (use-package comint
   :ensure nil
@@ -181,9 +181,7 @@
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((julia . t)
-     (R . t)
-     (latex . t)))
+   '((julia . t) (R . t) (latex . t)))
   :custom
   (org-latex-listings 'minted)
   (org-confirm-babel-evaluate nil)
@@ -215,22 +213,9 @@
 	      ("s-u" . #'paredit-backward-up)
 	      ("s-n" . #'paredit-forward-down)))
 
-(use-package sly
-  :config
-  (setq sly-default-lisp 'roswell
-	sly-lisp-implementations
-	`((roswell ("ros" "-Q" "run" "dynamic-space-size=4GB"))))
-  (defun my-setup-sly-repl ()
-    (interactive)
-    (define-key sly-mrepl-mode-map (kbd "C-<up>") #'comint-previous-input)
-    (define-key sly-mrepl-mode-map (kbd "C-<down>") #'comint-next-input))
-  (add-hook 'sly-mrepl-mode-hook #'my-setup-sly-repl))
-
 (use-package julia-mode
   :config
-  (add-to-list
-   'exec-path
-   "/home/ebn/.julia/juliaup/julia-1.9.4+0.x64.linux.gnu/bin/")
+  (add-to-list 'exec-path "/home/ebn/.julia/juliaup/julia-1.9.4+0.x64.linux.gnu/bin/")
   :hook (julia-mode . julia-repl-mode))
 
 (use-package julia-repl
@@ -245,3 +230,5 @@
   (require 'semantic/symref/grep)
   (add-to-list 'semantic-symref-filepattern-alist '(zig-mode "*.zig"))
   :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
+
+;; (add-to-list 'eshell-modules-list 'eshell-tramp) ; use eshell-sudo
