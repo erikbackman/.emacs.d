@@ -214,8 +214,6 @@
 	      ("s-n" . #'paredit-forward-down)))
 
 (use-package julia-mode
-  :config
-  (add-to-list 'exec-path "/home/ebn/.julia/juliaup/julia-1.9.4+0.x64.linux.gnu/bin/")
   :hook (julia-mode . julia-repl-mode))
 
 (use-package julia-repl
@@ -226,7 +224,6 @@
 
 (use-package zig-mode
   :config
-  (add-to-list 'exec-path "/home/ebn/opt/zig/")
   (require 'semantic/symref/grep)
   (add-to-list 'semantic-symref-filepattern-alist '(zig-mode "*.zig"))
   :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
