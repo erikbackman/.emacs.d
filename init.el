@@ -59,6 +59,7 @@
 (gbind "C-c t c" #'calc)
 (gbind "C-<tab>" #'hippie-expand)
 (gbind "C-ö" 'my-find-definitions)
+(gbind "M-z" 'zap-up-to-char)
 
 ;;; Package configuration
 ;;;
