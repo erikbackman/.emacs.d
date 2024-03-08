@@ -316,8 +316,8 @@ Takes care of adding or removing hooks when the
     `(mindre-prio-4 ((t (:foreground ,red))))
     
     ;; --- Header & mode line -------------------------------------------
-    `(mode-line ((t (:background "tan" :foreground "#051013"))))
-    `(mode-line-inactive ((t (:background "dark slate grey" :foreground "#9ea9ac"))))
+    `(mode-line ((t (:background "tan" :foreground "#051013" :box '(:color "grey5" :line-width 1)))))
+    `(mode-line-inactive ((t (:background "dark slate grey" :foreground "#9ea9ac" :box '(:color "grey5" :line-width 1)))))
     `(mode-line-buffer-id ((t (:weight regular :background unspecified))))
     `(mode-line-emphasis ((t (:weight regular :background unspecified))))
     `(header-line ((t (:inherit mindre-bar :box nil))))
@@ -430,7 +430,7 @@ Takes care of adding or removing hooks when the
     `(speedbar-button-face ((t (:inherit mindre-button))))
 
     ;; --- Line numbers -------------------------------------------------
-    '(line-number ((t (:inherit mindre-faded))))
+    '(line-number ((t (:inherit (mindre-faded default)))))
     '(line-number-current-line ((t (:inherit default))))
     `(line-number-major-tick ((t (:inherit mindre-faded))))
     '(line-number-minor-tick ((t (:inherit mindre-faded))))
