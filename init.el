@@ -22,7 +22,14 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 (setopt initial-scratch-message nil)
-
+;; IDO
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+(setq ido-use-filename-at-point 'guess)
+(setq ido-create-new-buffer 'always)
+(setq-default confirm-nonexistent-file-or-buffer nil)
+;;
 (add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
@@ -64,12 +71,10 @@
 ;;; Package configuration
 ;;;
 
-(use-package mindre-dark-theme
+(use-package ebn-citrus-theme
   :demand
   :load-path "lisp/"
-  :config
-  (load-theme 'mindre-dark t)
-  (set-face-attribute 'mode-line-inactive nil :background "dark slate grey" :foreground "#9ea9ac" :box '(:color "grey5" :line-width 1)))
+  :config (load-theme 'ebn-citrus t))
 
 (use-package comint
   :ensure nil

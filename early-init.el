@@ -1,6 +1,7 @@
 (push '(menu-bar-lines . 0) default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
-(push '(font . "M+ 1m-12") default-frame-alist)
+;;(push '(font . "M+ 1m-12") default-frame-alist)
+(push '(font . "Rec Mono Casual-12") default-frame-alist)
 (setq inhibit-startup-screen t)
 (setq initial-buffer-choice nil)
