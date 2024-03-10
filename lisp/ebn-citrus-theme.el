@@ -28,7 +28,9 @@
 
 (let ((bg "#1d2021")
       (fg "#f9f4e8")
-      (red "#e9b0b0")
+      (red+1 "#E9B0B0")
+      (red "#D9A0A0")
+      (red-1 "#C99090")
       (green "#7F9F7F")
       (green+1 "#8ca98c")
       (green+2 "#acd2ac")
@@ -53,9 +55,9 @@
    `(highlight ((t (:background "gray22"))))
    `(region ((t (:background "gray30"))))
    ;; --- Font lock ----------------------------------------------------
-   `(font-lock-comment-face ((t (:foreground ,yellow-2))))
+   `(font-lock-comment-face ((t (:foreground ,green+2))))
    `(font-lock-doc-face ((t (:foreground ,yellow-2))))
-   `(font-lock-string-face ((t (:foreground ,cyan))))
+   `(font-lock-string-face ((t (:foreground "RosyBrown1"))))
    `(font-lock-constant-face ((t (:foreground ,orange))))
    `(font-lock-type-face ((t (:foreground ,orange))))
    `(font-lock-keyword-face ((t (:foreground ,yellow :bold t))))
