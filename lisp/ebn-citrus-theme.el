@@ -85,6 +85,7 @@
    `(org-agenda-structure ((t (:foreground ,fg))))
    `(org-agenda-date-today ((t (:foreground ,yellow))))
    `(org-agenda-date-weekend-today ((t (:foreground ,yellow :slant italic))))
+   `(org-code ((t (:inherit fixed-pitch))))
 
    ;; --- Windows divider ----------------------------------------------
    `(window-divider ((t (:foreground ,bg))))
@@ -98,7 +99,8 @@
    `(message-header-to ((t (:foreground ,fg))))
    `(message-header-other ((t (:foreground ,fg))))
    `(notmuch-message-summary-face ((t (:inhert default))))
-
+   ;; Dired
+   `(dired-directory ((t (:foreground ,blue :bold t))))
    ))
 
 ;;;###autoload
