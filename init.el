@@ -25,16 +25,9 @@
 
 (delete-selection-mode)
 (repeat-mode)
-
-;; IDO
-(setq ido-decorations
-      '("" "" "  |  " "  |  ..." "[" "]" " [No match] " " [Matched] " " [Not readable]" " [Too big] " " [Confirm] "))
-(setq ido-max-window-height 1)
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
-(setq ido-use-filename-at-point 'guess)
-(setq ido-create-new-buffer 'always)
-(ido-mode 1)
+;; Icomplete-mode
+(icomplete-mode)
+(setq icomplete-prospects-height 1)
 (setq-default confirm-nonexistent-file-or-buffer nil)
 
 ;; Octave-Mode
