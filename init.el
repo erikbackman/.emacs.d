@@ -22,19 +22,24 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 (setopt initial-scratch-message nil)
-;; IDO
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
-(ido-mode 1)
-(setq ido-use-filename-at-point 'guess)
-(setq ido-create-new-buffer 'always)
-(setq-default confirm-nonexistent-file-or-buffer nil)
-;;
-(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
-(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
 (delete-selection-mode)
 (repeat-mode)
+
+;; IDO
+(setq ido-decorations
+      '("" "" "  |  " "  |  ..." "[" "]" " [No match] " " [Matched] " " [Not readable]" " [Too big] " " [Confirm] "))
+(setq ido-max-window-height 1)
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(setq ido-use-filename-at-point 'guess)
+(setq ido-create-new-buffer 'always)
+(ido-mode 1)
+(setq-default confirm-nonexistent-file-or-buffer nil)
+
+;; Octave-Mode
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
+(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
 ;; Functions
 (defun my-view-messages ()
@@ -185,9 +190,18 @@
 
 (use-package org
   :config
+  ;; (add-to-list 'org-babel-load-languages '(julia-vterm . t))
+  ;; (org-babel-load-languages 'org-babel-load-languages org-babel-load-languages)
+  (defalias 'org-babel-execute:julia
+    'org-babel-execute:julia-vterm)
+  (defalias 'org-babel-variable-assignments:julia
+    'org-babel-variable-assignments:julia-vterm)
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((julia . t) (R . t) (latex . t)))
+   '(;;(julia . t)
+     ;;(R . t)
+     (julia-vterm . t)
+     (latex . t)))
   :custom
   (org-latex-listings 'minted)
   (org-confirm-babel-evaluate nil)
