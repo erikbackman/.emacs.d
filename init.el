@@ -29,6 +29,7 @@
 (icomplete-mode)
 (setq icomplete-prospects-height 1)
 (setq-default confirm-nonexistent-file-or-buffer nil)
+(setq completion-styles '(basic partial-completion emacs22 flex))
 
 ;; Octave-Mode
 (add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
@@ -98,6 +99,7 @@
     (completion-preview-mode))
   :hook ((zig-mode . init-cape)
 	 (eshell-mode . init-cape)
+	 (julia-mode . init-cape)
 	 (emacs-lisp-mode . init-cape)))
 
 (use-package pdf-tools
@@ -227,13 +229,13 @@
 	      ("s-n" . #'paredit-forward-down)))
 
 (use-package julia-mode
-  :hook (julia-mode . julia-repl-mode))
+  :hook (julia-mode . julia-vterm-mode))
 
-(use-package julia-repl
+(use-package julia-vterm
   :init
   (setenv "JULIA_NUM_THREADS" "8")
   :config
-  (julia-repl-set-terminal-backend 'vterm))
+  (setq julia-vterm-repl-program "julia --color=no -t 8"))
 
 (use-package zig-mode
   :config
