@@ -47,6 +47,15 @@
   (interactive)
   (call-interactively 'xref-find-definitions))
 
+(defun swap-window ()
+  (interactive)
+  (let ((w (get-buffer-window (current-buffer))))
+    (cond
+     ((window-right w)
+      (windmove-swap-states-right))
+     ((window-left w)
+      (windmove-swap-states-left)))))
+
 ;; Global keybinds
 (defmacro gbind (key command)
   "Globally map `KEY' to `COMMAND'."
@@ -66,6 +75,7 @@
 (gbind "C-<tab>" #'hippie-expand)
 (gbind "C-ö" 'my-find-definitions)
 (gbind "M-z" 'zap-up-to-char)
+(gbind "C-x w w" #'swap-window)
 
 ;;; Package configuration
 ;;;
@@ -235,7 +245,9 @@
   :init
   (setenv "JULIA_NUM_THREADS" "8")
   :config
-  (setq julia-vterm-repl-program "julia --color=no -t 8"))
+  (setq julia-vterm-repl-program "julia --color=no -t 8")
+  :bind (:map julia-vterm-mode-map
+	      ("C-c C-b" . #'julia-vterm-send-include-buffer-file)))
 
 (use-package zig-mode
   :config
