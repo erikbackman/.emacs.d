@@ -32,8 +32,10 @@
 (setq completion-styles '(basic partial-completion emacs22 flex))
 
 ;; Octave-Mode
-(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
+
+;; Prog-Mode
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
 
 ;; Functions
 (defun my-view-messages ()
@@ -252,6 +254,7 @@
 (use-package zig-mode
   :config
   (require 'semantic/symref/grep)
+  (add-hook 'zig-mode-hook #'which-function-mode)
   (add-to-list 'semantic-symref-filepattern-alist '(zig-mode "*.zig"))
   :bind (:map zig-mode-map ("C-c C-c" . #'recompile)))
 
