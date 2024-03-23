@@ -75,10 +75,15 @@
 					 :box (:color "#030303" :line-width 1)))))
    `(minibuffer-prompt ((t (:inherit default))))
 
+   ;; Which-Func
+   `(which-func ((t (:foreground "#ffd787"))))
    ;; IDO
    `(ido-first-match ((t (:foreground ,yellow))))
    `(ido-only-match ((t (:foreground "medium aquamarine"))))
    `(ido-subdir ((t (:foreground ,blue))))
+
+   ;; IComplete
+   `(icomplete-first-match ((t (:foreground ,yellow))))
 
    ;; ORG
    `(org-agenda-done ((t (:foreground ,green+2))))
@@ -101,6 +106,11 @@
    `(notmuch-message-summary-face ((t (:inhert default))))
    ;; Dired
    `(dired-directory ((t (:foreground ,blue :bold t))))
+
+   ;; Shell/Vterm/..
+   `(ansi-color-red ((t (:foreground "#BF4040"))))
+   `(ansi-color-blue ((t (:foreground ,blue))))
+   `(ansi-color-black ((t (:foreground "gray80"))))
    ))
 
 ;;;###autoload
