@@ -251,6 +251,7 @@
   :bind (:map julia-vterm-mode-map
 	      ("C-c C-b" . #'julia-vterm-send-include-buffer-file)))
 
+(setq which-func-modes '(zig-mode))
 (use-package zig-mode
   :config
   (require 'semantic/symref/grep)
