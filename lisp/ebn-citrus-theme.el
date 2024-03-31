@@ -91,6 +91,10 @@
    `(org-agenda-date-today ((t (:foreground ,yellow))))
    `(org-agenda-date-weekend-today ((t (:foreground ,yellow :slant italic))))
    `(org-code ((t (:inherit fixed-pitch))))
+   `(org-block ((t (:inherit default))))
+   `(org-table ((t (:inherit default))))
+   `(org-date ((t (:foreground "#99DDE0"))))
+   `(org-checkbox ((t (:box (:line-width 2 :style released-button)))))
 
    ;; --- Windows divider ----------------------------------------------
    `(window-divider ((t (:foreground ,bg))))
