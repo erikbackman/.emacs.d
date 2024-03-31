@@ -58,6 +58,13 @@
      ((window-left w)
       (windmove-swap-states-left)))))
 
+(defun my-isearch-thing-at-point ()
+  (interactive)
+  (let ((str (substring-no-properties (thing-at-point 'symbol))))
+    (isearch-forward nil 1)
+    (message str)
+    (isearch-yank-string str)))
+
 ;; Global keybinds
 (defmacro gbind (key command)
   "Globally map `KEY' to `COMMAND'."
@@ -78,6 +85,8 @@
 (gbind "C-ö" 'my-find-definitions)
 (gbind "M-z" 'zap-up-to-char)
 (gbind "C-x w w" #'swap-window)
+(gbind "<f4>" #'bookmark-bmenu-list)
+(gbind "C-'" #'my-isearch-thing-at-point)
 
 ;;; Package configuration
 ;;;
@@ -206,7 +215,7 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '(;;(julia . t)
-     ;;(R . t)
+     (octave . t)
      (julia-vterm . t)
      (latex . t)))
   :custom
