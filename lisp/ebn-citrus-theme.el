@@ -67,16 +67,15 @@
    `(font-lock-builtin-face ((t (:foreground ,yellow))))
    `(font-lock-warning-face ((t (:foreground ,red))))
 
-   ;;  --- UI ----------------------------------------------------
-   `(mode-line ((t (:background "grey20" :foreground ,fg
-				:box (:color "#030303" :line-width 1)))))
-   
-   `(mode-line-inactive ((t (:background "gray15" :foreground "gray50"
-					 :box (:color "#030303" :line-width 1)))))
+   ;; UI
+   `(mode-line ((t (:background "grey20" :foreground ,fg :box (:color "#030303" :line-width 1)))))
+
+   `(mode-line-inactive ((t (:background "gray15" :foreground "gray50" :box (:color "#030303" :line-width 1)))))
    `(minibuffer-prompt ((t (:inherit default))))
 
    ;; Which-Func
    `(which-func ((t (:foreground "#ffd787"))))
+
    ;; IDO
    `(ido-first-match ((t (:foreground ,yellow))))
    `(ido-only-match ((t (:foreground "medium aquamarine"))))
@@ -85,7 +84,7 @@
    ;; IComplete
    `(icomplete-first-match ((t (:foreground ,yellow))))
 
-   ;; ORG
+   ;; Org
    `(org-agenda-done ((t (:foreground ,green+2))))
    `(org-agenda-structure ((t (:foreground ,fg))))
    `(org-agenda-date-today ((t (:foreground ,yellow))))
@@ -96,7 +95,7 @@
    `(org-date ((t (:foreground "#99DDE0"))))
    `(org-checkbox ((t (:box (:line-width 2 :style released-button)))))
 
-   ;; --- Windows divider ----------------------------------------------
+   ;; Windows divider
    `(window-divider ((t (:foreground ,bg))))
    '(window-divider-first-pixel ((t (:inherit window-divider))))
    '(window-divider-last-pixel ((t (:inherit window-divider))))
@@ -108,19 +107,27 @@
    `(message-header-to ((t (:foreground ,fg))))
    `(message-header-other ((t (:foreground ,fg))))
    `(notmuch-message-summary-face ((t (:inhert default))))
+
    ;; Dired
    `(dired-directory ((t (:foreground ,blue :bold t))))
 
-   ;; Shell/Vterm/..
+   ;; Shell/Vterm
    `(ansi-color-red ((t (:foreground "#BF4040"))))
    `(ansi-color-blue ((t (:foreground ,blue))))
    `(ansi-color-black ((t (:foreground "gray80"))))
+
+   ;; Compilation
+   `(compilation-warning ((t (:foreground ,yellow))))
+   `(compilation-info ((t (:foreground ,green+2))))
+   `(compilation-mode-line-fail ((t (:foreground ,red+1))))
+   `(compilation-mode-line-exit ((t (:foreground ,green+2))))
    ))
+
 
 ;;;###autoload
 (when (and (boundp 'custom-theme-load-path) load-file-name)
   (add-to-list 'custom-theme-load-path
-	       (file-name-as-directory (file-name-directory load-file-name))))
+               (file-name-as-directory (file-name-directory load-file-name))))
 
 (provide-theme 'ebn-citrus)
 
