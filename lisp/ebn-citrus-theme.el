@@ -56,7 +56,7 @@
    `(region ((t (:background "gray30"))))
    ;; --- Font lock ----------------------------------------------------
    `(font-lock-comment-face ((t (:foreground ,green+2))))
-   `(font-lock-doc-face ((t (:foreground ,yellow-2))))
+   `(font-lock-doc-face ((t (:inherit font-lock-comment-face))))
    `(font-lock-string-face ((t (:foreground "RosyBrown1"))))
    `(font-lock-constant-face ((t (:foreground ,orange))))
    `(font-lock-type-face ((t (:foreground ,orange))))
@@ -93,7 +93,7 @@
    `(org-block ((t (:inherit default))))
    `(org-table ((t (:inherit default))))
    `(org-date ((t (:foreground "#99DDE0"))))
-   `(org-checkbox ((t (:box (:line-width 2 :style released-button)))))
+   `(org-checkbox ((t :background "gray20" (:box (:line-width 2 :style released-button)))))
 
    ;; Windows divider
    `(window-divider ((t (:foreground ,bg))))
